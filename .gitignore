@@ -1,0 +1,28 @@
+# Build
+[Bb]in/
+[Oo]bj/
+.vs/
+*.user
+*.suo
+
+# Projeto de testes (não versionar)
+PontoDaFarra.Tests/
+
+# Segredos / variáveis de ambiente
+.env
+.env.*
+!.env.example
+
+# Conteúdo de runtime (uploads de imagem)
+uploads/
+
+# Testes / cobertura
+TestResults/
+coverage*.json
+coverage*.xml
+
+# Logs e temp
+*.log
+*.tmp
+.idea/
+.vscode/

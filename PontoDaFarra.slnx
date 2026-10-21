@@ -1,0 +1,4 @@
+<Solution>
+  <Project Path="PontoDaFarra.Tests/PontoDaFarra.Tests.csproj" />
+  <Project Path="PontoDaFarra/PontoDaFarra.csproj" />
+</Solution>
