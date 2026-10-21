@@ -92,6 +92,7 @@ namespace PontoDaFarra.controllers
             return Ok(new
             {
                 userId,
+                name = User.FindFirstValue(JwtRegisteredClaimNames.Name),
                 email = User.FindFirstValue(JwtRegisteredClaimNames.Email)
                         ?? User.FindFirstValue(ClaimTypes.Email),
                 role = User.FindFirstValue(ClaimTypes.Role)
