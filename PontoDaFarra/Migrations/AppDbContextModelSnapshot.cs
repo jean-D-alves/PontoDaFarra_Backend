@@ -125,6 +125,7 @@ namespace PontoDaFarra.Migrations
                         .HasColumnType("character varying(80)");
 
                     b.Property<string>("PhoneNumber")
+                        .IsRequired()
                         .HasColumnType("text");
 
                     b.Property<string>("Role")

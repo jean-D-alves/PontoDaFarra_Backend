@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using PontoDaFarra.DTOs.Auth;
 using PontoDaFarra.DTOs.User;
+using PontoDaFarra.Exceptions;
 using PontoDaFarra.services;
 
 namespace PontoDaFarra.controllers
@@ -21,18 +22,11 @@ namespace PontoDaFarra.controllers
         [AllowAnonymous]
         public async Task<IActionResult> Register(UserCreate dto)
         {
-            try
-            {
-                var result = await userServices.CreateUserAsync(dto);
+            var result = await userServices.CreateUserAsync(dto);
 
-                authCookieService.Set(HttpContext, result.AccessToken, result.RefreshToken);
+            authCookieService.Set(HttpContext, result.AccessToken, result.RefreshToken);
 
-                return StatusCode(201, new { result.UserId, result.Email, result.Name, result.Role });
-            }
-            catch (InvalidOperationException)
-            {
-                return Conflict(new { message = "Email already registered" });
-            }
+            return StatusCode(201, new { result.UserId, result.Email, result.Name, result.PhoneNumber, result.Role });
         }
 
         [HttpPost("login")]
@@ -40,9 +34,6 @@ namespace PontoDaFarra.controllers
         public async Task<IActionResult> Login(LoginRequest request)
         {
             var result = await authServices.LoginAsync(request);
-
-            if (result is null)
-                return Unauthorized(new { message = "Invalid email or password" });
 
             authCookieService.Set(HttpContext, result.AccessToken, result.RefreshToken);
 
@@ -56,12 +47,9 @@ namespace PontoDaFarra.controllers
             var refreshToken = Request.Cookies[AuthCookieService.RefreshTokenCookie] ?? request?.RefreshToken;
 
             if (string.IsNullOrEmpty(refreshToken))
-                return Unauthorized(new { message = "Missing refresh token" });
+                throw new UnauthorizedException("Missing refresh token");
 
             var result = await authServices.RefreshAsync(refreshToken);
-
-            if (result is null)
-                return Unauthorized(new { message = "Invalid or expired refresh token" });
 
             authCookieService.Set(HttpContext, result.AccessToken, result.RefreshToken);
 
@@ -93,8 +81,8 @@ namespace PontoDaFarra.controllers
             {
                 userId,
                 name = User.FindFirstValue(JwtRegisteredClaimNames.Name),
-                email = User.FindFirstValue(JwtRegisteredClaimNames.Email)
-                        ?? User.FindFirstValue(ClaimTypes.Email),
+                email = User.FindFirstValue(JwtRegisteredClaimNames.Email) ?? User.FindFirstValue(ClaimTypes.Email),
+                phoneNumber = User.FindFirstValue(JwtRegisteredClaimNames.PhoneNumber) ?? User.FindFirstValue("phone_number"),
                 role = User.FindFirstValue(ClaimTypes.Role)
             });
         }

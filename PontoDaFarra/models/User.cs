@@ -16,7 +16,7 @@ namespace PontoDaFarra.models
         [StringLength(80)]
         public required String Password { get; set; }
         [Phone]
-        public String? PhoneNumber { get; set; }
+        public required String PhoneNumber { get; set; }
         public string Role { get; set; } = "Client";
         public ICollection<RefreshToken> RefreshTokens { get; set; } = new List<RefreshToken>();
         

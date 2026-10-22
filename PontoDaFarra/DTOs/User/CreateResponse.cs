@@ -8,6 +8,7 @@ namespace PontoDaFarra.DTOs.User
         public required String Email { get; set; }
         public required String Role { get; set; }
         public required string Name { get; set; }
+        public required string PhoneNumber { get; set; }
         public required string RefreshToken { get; set; }
         public required string AccessToken { get; set; }
     }

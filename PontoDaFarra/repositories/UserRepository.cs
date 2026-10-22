@@ -1,5 +1,8 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.ChangeTracking;
+using Npgsql;
 using PontoDaFarra.context;
+using PontoDaFarra.Exceptions;
 using PontoDaFarra.models;
 using PontoDaFarra.repositories.Interface;
 
@@ -30,23 +33,26 @@ namespace PontoDaFarra.repositories
             {
                 await _context.SaveChangesAsync();
             }
-            catch (DbUpdateException)
+            catch (DbUpdateException exception) when (exception.InnerException is PostgresException
+                { SqlState: PostgresErrorCodes.UniqueViolation })
             {
-                throw new InvalidOperationException("Email already registered");
+                throw new ConflictException("Email already registered");
             }
 
             return user;
         }
-        public async Task UpdateUserAsync(User user)
+        public async Task<User> UpdateUserAsync(User user)
         {
-            _context.Users.Update(user);
+            EntityEntry<User> entry = _context.Users.Update(user);
             await _context.SaveChangesAsync();
+            return entry.Entity;
         }
 
-        public async Task DeleteUserAsync(User user)
+        public async Task<User> DeleteUserAsync(User user)
         {
             _context.Users.Remove(user);
             await _context.SaveChangesAsync();
+            return user;
         }
 
         public async Task<bool> EmailExistsAsync(string email)

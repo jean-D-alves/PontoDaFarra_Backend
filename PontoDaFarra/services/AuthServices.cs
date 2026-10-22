@@ -1,4 +1,5 @@
 using PontoDaFarra.DTOs.Auth;
+using PontoDaFarra.Exceptions;
 using PontoDaFarra.models;
 using PontoDaFarra.repositories.Interface;
 using PontoDaFarra.Services;
@@ -10,17 +11,17 @@ public class AuthServices(
     IRefreshTokenRepository refreshTokenRepository,
     ITokenService tokenService)
 {
-    public async Task<AuthResponse?> LoginAsync(LoginRequest request)
+    public async Task<AuthResponse> LoginAsync(LoginRequest request)
     {
         var email = request.Email.Trim().ToLowerInvariant();
         var user = await userRepository.GetUserByEmailAsync(email);
 
         if (user is null || !PasswordService.VerifyPassword(request.Password, user.Password))
-            return null;
+            throw new UnauthorizedException("Invalid email or password");
 
         await refreshTokenRepository.RevokeAllByUserIdAsync(user.UserId);
 
-        var accessToken = tokenService.GenerateAccessToken(user.UserId, user.Email, user.Name, [user.Role]);
+        var accessToken = tokenService.GenerateAccessToken(user.UserId, user.Email, user.Name, user.PhoneNumber, [user.Role]);
         var refreshToken = tokenService.GenerateRefreshToken();
 
         await refreshTokenRepository.AddAsync(new RefreshToken
@@ -34,26 +35,25 @@ public class AuthServices(
         return new AuthResponse(accessToken, refreshToken.Token);
     }
 
-    public async Task<AuthResponse?> RefreshAsync(string refreshToken)
+    public async Task<AuthResponse> RefreshAsync(string refreshToken)
     {
         var hash = tokenService.HashToken(refreshToken);
         var stored = await refreshTokenRepository.GetByHashAsync(hash);
 
         if (stored is null)
-            return null;
+            throw new UnauthorizedException("Invalid or expired refresh token");
 
         if (stored.IsRevoked && stored.ReplacedByTokenHash is not null)
         {
             await refreshTokenRepository.RevokeAllByUserIdAsync(stored.UserId);
-            return null;
+            throw new UnauthorizedException("Invalid or expired refresh token");
         }
 
         if (!stored.IsActive)
-            return null;
+            throw new UnauthorizedException("Invalid or expired refresh token");
 
-        var user = await userRepository.GetUserByIdAsync(stored.UserId);
-        if (user is null)
-            return null;
+        var user = await userRepository.GetUserByIdAsync(stored.UserId)
+            ?? throw new UnauthorizedException("Invalid or expired refresh token");
 
         var newRefreshToken = tokenService.GenerateRefreshToken();
 
@@ -67,7 +67,7 @@ public class AuthServices(
             ExpiresAt = newRefreshToken.ExpiresAt
         });
 
-        var accessToken = tokenService.GenerateAccessToken(user.UserId, user.Email, user.Name, [user.Role]);
+        var accessToken = tokenService.GenerateAccessToken(user.UserId, user.Email, user.Name, user.PhoneNumber, [user.Role]);
 
         return new AuthResponse(accessToken, newRefreshToken.Token);
     }
@@ -82,10 +82,5 @@ public class AuthServices(
             stored.RevokedAt = DateTime.UtcNow;
             await refreshTokenRepository.UpdateAsync(stored);
         }
-    }
-
-    internal async Task LoginAsync(Microsoft.AspNetCore.Identity.Data.LoginRequest request)
-    {
-        throw new NotImplementedException();
     }
 }

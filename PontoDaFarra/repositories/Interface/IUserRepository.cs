@@ -8,7 +8,7 @@ namespace PontoDaFarra.repositories.Interface
         Task<User?> GetUserByEmailAsync(string email);
         Task<bool> EmailExistsAsync(string email);
         Task<User> CreateUserAsync(User user, RefreshToken refreshToken);
-        Task UpdateUserAsync(User user);
-        Task DeleteUserAsync(User user);
+        Task<User> UpdateUserAsync(User user);
+        Task<User> DeleteUserAsync(User user);
     }
 }

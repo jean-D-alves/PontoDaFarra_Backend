@@ -29,7 +29,7 @@ public class TokenService : ITokenService
         _refreshTokenDays = config.GetValue("REFRESH_EXPIRES_DAYS", 7);
     }
 
-    public string GenerateAccessToken(Guid userId, string email,string name, IEnumerable<string> roles)
+    public string GenerateAccessToken(Guid userId, string email, string name, string? phoneNumber, IEnumerable<string> roles)
     {
         var claims = new List<Claim>
         {
@@ -38,6 +38,7 @@ public class TokenService : ITokenService
             new(JwtRegisteredClaimNames.Name, name),
             new(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
         };
+        claims.Add(new Claim("phone_number", phoneNumber ?? string.Empty));
         claims.AddRange(roles.Select(role => new Claim(ClaimTypes.Role, role)));
 
         var token = new JwtSecurityToken(

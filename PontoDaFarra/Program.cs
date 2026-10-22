@@ -1,13 +1,17 @@
+using System.Diagnostics;
 using System.Text;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.HttpOverrides;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using PontoDaFarra.context;
+using PontoDaFarra.Middleware;
 using PontoDaFarra.repositories;
 using PontoDaFarra.repositories.Interface;
 using PontoDaFarra.services;
 using PontoDaFarra.Services;
+using PontoDaFarra.services.Interface;
 DotNetEnv.Env.TraversePath().Load();
 var builder = WebApplication.CreateBuilder(args);
 
@@ -61,6 +65,7 @@ builder.Services
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IRefreshTokenRepository, RefreshTokenRepository>();
 builder.Services.AddScoped<UserServices>();
+builder.Services.AddScoped<IUserService>(provider => provider.GetRequiredService<UserServices>());
 builder.Services.AddScoped<AuthServices>();
 builder.Services.AddScoped<ITokenService, TokenService>();
 builder.Services.AddScoped<AuthCookieService>();
@@ -77,10 +82,54 @@ builder.Services.AddCors(o => o.AddDefaultPolicy(p =>
 builder.Services.AddControllers();
 builder.Services.AddSwaggerGen();
 
+builder.Services.AddOptions();
+builder.Services.AddProblemDetails(options =>
+{
+    options.CustomizeProblemDetails = context =>
+    {
+        var problemDetails = context.ProblemDetails;
+
+        problemDetails.Instance ??= context.HttpContext.Request.Path;
+        problemDetails.Type ??= ProblemDetailsWriter.ProblemType(problemDetails.Status ?? StatusCodes.Status500InternalServerError);
+        problemDetails.Extensions.TryAdd("traceId", Activity.Current?.Id ?? context.HttpContext.TraceIdentifier);
+    };
+});
+
+builder.Services.AddSingleton<ProblemDetailsWriter>();
+builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
+
+builder.Services.Configure<ApiBehaviorOptions>(options =>
+{
+    options.InvalidModelStateResponseFactory = context =>
+    {
+        var statusCode = StatusCodes.Status400BadRequest;
+
+        var problemDetails = new ValidationProblemDetails(context.ModelState)
+        {
+            Status = statusCode,
+            Title = ProblemDetailsWriter.Title(statusCode),
+            Detail = ProblemDetailsWriter.Detail(statusCode),
+            Instance = context.HttpContext.Request.Path,
+            Type = ProblemDetailsWriter.ProblemType(statusCode)
+        };
+
+        problemDetails.Extensions["traceId"] = Activity.Current?.Id ?? context.HttpContext.TraceIdentifier;
+
+        return new BadRequestObjectResult(problemDetails)
+        {
+            ContentTypes = { ProblemDetailsWriter.ProblemJsonContentType }
+        };
+    };
+});
+
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
 
 var app = builder.Build();
+
+app.UseExceptionHandler();
+
+app.UseMiddleware<ProblemDetailsStatusCodeMiddleware>();
 
 if (app.Environment.IsDevelopment())
 {
