@@ -12,6 +12,8 @@ namespace PontoDaFarra.models
         public required String Description { get; set; }
         public required String Value { get; set; }
         public bool IsAvailable { get; set; } = true;
+        public bool IsPromotional { get; set; } = false;
+        public required String ImageUrl { get; set; }
         public required Guid CategoryId { get; set; }
         public Category Category { get; set; } = null!;
     }

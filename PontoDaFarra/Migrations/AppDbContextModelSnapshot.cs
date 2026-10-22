@@ -50,7 +50,14 @@ namespace PontoDaFarra.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
+                    b.Property<string>("ImageUrl")
+                        .IsRequired()
+                        .HasColumnType("text");
+
                     b.Property<bool>("IsAvailable")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("IsPromotional")
                         .HasColumnType("boolean");
 
                     b.Property<string>("Name")
