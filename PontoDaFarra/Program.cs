@@ -68,6 +68,8 @@ builder.Services.AddScoped<UserServices>();
 builder.Services.AddScoped<IUserService>(provider => provider.GetRequiredService<UserServices>());
 builder.Services.AddScoped<AuthServices>();
 builder.Services.AddScoped<ITokenService, TokenService>();
+builder.Services.AddScoped<ICategoryRepository, CategoryRepository>();
+builder.Services.AddScoped<ICategoryServices, CategoryServices>();
 builder.Services.AddScoped<AuthCookieService>();
 builder.Services.AddHostedService<RefreshTokenCleanupService>();
 
