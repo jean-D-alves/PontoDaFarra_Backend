@@ -12,7 +12,7 @@ namespace PontoDaFarra.services
         ICategoryRepository categoryRepository) : ICategoryServices
     {
         private const int MaxProductsPerCategory = 5;
-        public async Task<CategoryResponse> CreateCategoryAsync(CreateRequest dto)
+        public async Task<CategoryResponse> CreateCategoryAsync(CreateCategoryRequest dto)
         {
             Category entry = new Category
             {
@@ -55,7 +55,7 @@ namespace PontoDaFarra.services
                 Name = category.Name
             };
         }
-        public async Task<CategoryResponse> UpdateCategoryAsync(Guid categoryId, CreateRequest dto)
+        public async Task<CategoryResponse> UpdateCategoryAsync(Guid categoryId, CreateCategoryRequest dto)
         {
             Category? existingCategory = await categoryRepository.GetCategoryByIdAsync(categoryId);
 

@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 
 namespace PontoDaFarra.DTOs.Category
 {
-    public class CreateRequest
+    public class CreateCategoryRequest
     {
         public required String Name { get; set; }
     }

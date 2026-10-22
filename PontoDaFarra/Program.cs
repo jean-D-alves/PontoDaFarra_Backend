@@ -12,7 +12,10 @@ using PontoDaFarra.repositories.Interface;
 using PontoDaFarra.services;
 using PontoDaFarra.Services;
 using PontoDaFarra.services.Interface;
+using Microsoft.Extensions.FileProviders;
+
 DotNetEnv.Env.TraversePath().Load();
+
 var builder = WebApplication.CreateBuilder(args);
 
 var jwtKey = builder.Configuration["JWT_KEY"]
@@ -69,9 +72,20 @@ builder.Services.AddScoped<IUserService>(provider => provider.GetRequiredService
 builder.Services.AddScoped<AuthServices>();
 builder.Services.AddScoped<ITokenService, TokenService>();
 builder.Services.AddScoped<ICategoryRepository, CategoryRepository>();
+builder.Services.AddScoped<IProductsRepository, ProductsRepository>();
 builder.Services.AddScoped<ICategoryServices, CategoryServices>();
+builder.Services.AddScoped<IProductService, ProductService>();
 builder.Services.AddScoped<AuthCookieService>();
 builder.Services.AddHostedService<RefreshTokenCleanupService>();
+
+if (builder.Environment.IsDevelopment())
+{
+    builder.Services.AddSingleton<IImageStorage, LocalImageStorage>(); 
+}
+else
+{
+    builder.Services.AddSingleton<IImageStorage, R2ImageStorage>();
+}
 
 builder.Services.AddAuthorization();
 
@@ -135,6 +149,11 @@ app.UseMiddleware<ProblemDetailsStatusCodeMiddleware>();
 
 if (app.Environment.IsDevelopment())
 {
+    app.UseStaticFiles(new StaticFileOptions
+    {
+        FileProvider = new PhysicalFileProvider(Path.GetFullPath("uploads")),
+        RequestPath = "/uploads"
+    });
     using var scope = app.Services.CreateScope();
     var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
     db.Database.Migrate();
@@ -148,7 +167,7 @@ app.UseForwardedHeaders();
 app.UseHttpsRedirection();
 
 app.UseCors();
-app.UseAuthentication(); 
+app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();

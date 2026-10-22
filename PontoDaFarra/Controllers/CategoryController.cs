@@ -16,7 +16,7 @@ namespace PontoDaFarra.Controllers
     {
         [HttpPost]
         [Authorize(Roles = "Admin")]
-        public async Task<IActionResult> CreateCategory([FromBody] CreateRequest dto)
+        public async Task<IActionResult> CreateCategory([FromBody] CreateCategoryRequest dto)
         {
             CategoryResponse response = await categoryServices.CreateCategoryAsync(dto);
             return StatusCode(201, response);
@@ -60,7 +60,7 @@ namespace PontoDaFarra.Controllers
 
         [HttpPut("{categoryId}")]
         [Authorize(Roles = "Admin")]
-        public async Task<IActionResult> UpdateCategory(Guid categoryId, [FromBody] CreateRequest dto)
+        public async Task<IActionResult> UpdateCategory(Guid categoryId, [FromBody] CreateCategoryRequest dto)
         {
             try
             {
