@@ -44,7 +44,10 @@ public sealed class GlobalExceptionHandler(
             (appException.StatusCode, appException.Title, appException.Message),
 
         BadHttpRequestException badRequest =>
-            (StatusCodes.Status400BadRequest, ProblemDetailsWriter.Title(StatusCodes.Status400BadRequest), badRequest.Message),
+            (badRequest.StatusCode, ProblemDetailsWriter.Title(badRequest.StatusCode), ProblemDetailsWriter.Detail(badRequest.StatusCode)),
+
+        InvalidDataException =>
+            (StatusCodes.Status413PayloadTooLarge, ProblemDetailsWriter.Title(StatusCodes.Status413PayloadTooLarge), ProblemDetailsWriter.Detail(StatusCodes.Status413PayloadTooLarge)),
 
         JsonException json =>
             (StatusCodes.Status400BadRequest, ProblemDetailsWriter.Title(StatusCodes.Status400BadRequest), json.Message),

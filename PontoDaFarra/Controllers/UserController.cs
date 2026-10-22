@@ -22,6 +22,7 @@ namespace PontoDaFarra.Controllers
         }
 
         [HttpPut("{Userid:guid}")]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> UpdateUserById(Guid Userid)
         {
             var callerId = GetUserId();
@@ -39,6 +40,7 @@ namespace PontoDaFarra.Controllers
         }
 
         [HttpDelete("{id:guid}")]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> DeleteUserById(Guid id)
         {
             var callerId = GetUserId();

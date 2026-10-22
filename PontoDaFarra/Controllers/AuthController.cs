@@ -2,6 +2,7 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using PontoDaFarra.DTOs.Auth;
 using PontoDaFarra.DTOs.User;
 using PontoDaFarra.Exceptions;
@@ -20,6 +21,7 @@ namespace PontoDaFarra.controllers
 
         [HttpPost("register")]
         [AllowAnonymous]
+        [EnableRateLimiting("auth")]
         public async Task<IActionResult> Register(UserCreate dto)
         {
             var result = await userServices.CreateUserAsync(dto);
@@ -31,6 +33,7 @@ namespace PontoDaFarra.controllers
 
         [HttpPost("login")]
         [AllowAnonymous]
+        [EnableRateLimiting("auth")]
         public async Task<IActionResult> Login(LoginRequest request)
         {
             var result = await authServices.LoginAsync(request);
@@ -42,6 +45,7 @@ namespace PontoDaFarra.controllers
 
         [HttpPost("refresh")]
         [AllowAnonymous]
+        [EnableRateLimiting("auth")]
         public async Task<IActionResult> Refresh(RefreshRequest? request)
         {
             var refreshToken = Request.Cookies[AuthCookieService.RefreshTokenCookie] ?? request?.RefreshToken;

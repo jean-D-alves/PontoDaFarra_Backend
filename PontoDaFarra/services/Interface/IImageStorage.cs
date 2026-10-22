@@ -7,7 +7,7 @@ namespace PontoDaFarra.services.Interface
 {
     public interface IImageStorage
     {
-        Task<string> UploadAsync(Stream content, string fileName, string contentType, CancellationToken ct = default);
+        Task<string> UploadAsync(Stream content, string extension, string contentType, CancellationToken ct = default);
         Task DeleteAsync(string key, CancellationToken ct = default);
         string GetPublicUrl(string key);
     }

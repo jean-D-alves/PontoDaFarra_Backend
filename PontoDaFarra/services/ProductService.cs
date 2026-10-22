@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using PontoDaFarra.DTOs.Global;
 using PontoDaFarra.DTOs.Products;
+using PontoDaFarra.Exceptions;
 using PontoDaFarra.models;
 using PontoDaFarra.repositories.Interface;
 using PontoDaFarra.services.Interface;
@@ -14,23 +15,28 @@ namespace PontoDaFarra.services
         IProductsRepository productsRepository,
         IImageStorage imageStorage) : IProductService
     {
-        private static readonly string[] AllowedTypes = ["image/jpeg", "image/png", "image/webp"];
         private const long MaxImageSize = 5 * 1024 * 1024;
 
         public async Task<ProductResponse> CreateProductAsync(CreateProductRequest dto)
         {
+            if (dto.CategoryId == Guid.Empty)
+                throw new BadRequestException("CategoryId is required.");
+
             string? imageKey = null;
 
             if (dto.Image is { Length: > 0 })
             {
-                if (!AllowedTypes.Contains(dto.Image.ContentType))
-                    throw new ArgumentException("Invalid image type. Use JPEG, PNG, or WebP.");
-
                 if (dto.Image.Length > MaxImageSize)
-                    throw new ArgumentException("The image must be no larger than 5 MB.");
+                    throw new BadRequestException("The image must be no larger than 5 MB.");
 
                 await using var stream = dto.Image.OpenReadStream();
-                imageKey = await imageStorage.UploadAsync(stream, dto.Image.FileName, dto.Image.ContentType);
+
+                var format = ImageSignatureValidator.Detect(stream)
+                    ?? throw new BadRequestException("Invalid image content. Use JPEG, PNG, or WebP.");
+
+                if (stream.CanSeek) stream.Position = 0;
+
+                imageKey = await imageStorage.UploadAsync(stream, format.Extension, format.ContentType);
             }
 
             try
@@ -82,6 +88,8 @@ namespace PontoDaFarra.services
         }
         public async Task<PagedResponse<ProductResponse>> SearchProductsAsync(string name, int page, int pageSize)
         {
+            page = Math.Max(page, 1);
+            pageSize = Math.Clamp(pageSize, 1, 50);
             var (items, total) = await productsRepository.SearchProductsAsync(name ?? string.Empty, page, pageSize);
 
             return new PagedResponse<ProductResponse>
@@ -107,18 +115,24 @@ namespace PontoDaFarra.services
             if (product is null)
                 throw new KeyNotFoundException("Produto não encontrado.");
 
+            if (dto.CategoryId == Guid.Empty)
+                throw new BadRequestException("CategoryId is required.");
+
             string? imageKey = product.ImageUrl;
 
             if (dto.Image is { Length: > 0 })
             {
-                if (!AllowedTypes.Contains(dto.Image.ContentType))
-                    throw new ArgumentException("Invalid image type. Use JPEG, PNG, or WebP.");
-
                 if (dto.Image.Length > MaxImageSize)
-                    throw new ArgumentException("The image must be no larger than 5 MB.");
+                    throw new BadRequestException("The image must be no larger than 5 MB.");
 
                 await using var stream = dto.Image.OpenReadStream();
-                imageKey = await imageStorage.UploadAsync(stream, dto.Image.FileName, dto.Image.ContentType);
+
+                var format = ImageSignatureValidator.Detect(stream)
+                    ?? throw new BadRequestException("Invalid image content. Use JPEG, PNG, or WebP.");
+
+                if (stream.CanSeek) stream.Position = 0;
+
+                imageKey = await imageStorage.UploadAsync(stream, format.Extension, format.ContentType);
 
                 if (product.ImageUrl is not null)
                     await imageStorage.DeleteAsync(product.ImageUrl);

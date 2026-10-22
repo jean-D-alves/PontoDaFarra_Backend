@@ -2,12 +2,15 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using PontoDaFarra.Exceptions;
 using PontoDaFarra.services.Interface;
 
 namespace PontoDaFarra.services
 {
     public class LocalImageStorage : IImageStorage
     {
+        private static readonly HashSet<string> AllowedExtensions = [".jpg", ".png", ".webp"];
+
         private readonly string _root;
         private readonly string _baseUrl;
 
@@ -18,9 +21,12 @@ namespace PontoDaFarra.services
             Directory.CreateDirectory(_root);
         }
 
-        public async Task<string> UploadAsync(Stream content, string fileName, string contentType, CancellationToken ct = default)
+        public async Task<string> UploadAsync(Stream content, string extension, string contentType, CancellationToken ct = default)
         {
-            var key = $"{Guid.NewGuid()}{Path.GetExtension(fileName)}";
+            if (!AllowedExtensions.Contains(extension))
+                throw new BadRequestException("Invalid image extension.");
+
+            var key = $"{Guid.NewGuid()}{extension}";
             await using var file = File.Create(Path.Combine(_root, key));
             await content.CopyToAsync(file, ct);
             return key;

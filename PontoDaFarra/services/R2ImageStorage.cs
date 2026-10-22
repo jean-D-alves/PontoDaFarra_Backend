@@ -4,12 +4,15 @@ using System.Linq;
 using System.Threading.Tasks;
 using Amazon.S3;
 using Amazon.S3.Model;
+using PontoDaFarra.Exceptions;
 using PontoDaFarra.services.Interface;
 
 namespace PontoDaFarra.services
 {
     public class R2ImageStorage : IImageStorage
     {
+        private static readonly HashSet<string> AllowedExtensions = [".jpg", ".png", ".webp"];
+
         private readonly IAmazonS3 _s3;
         private readonly string _bucket;
         private readonly string _publicUrl;
@@ -30,9 +33,12 @@ namespace PontoDaFarra.services
                 });
         }
 
-        public async Task<string> UploadAsync(Stream content, string fileName, string contentType, CancellationToken ct = default)
+        public async Task<string> UploadAsync(Stream content, string extension, string contentType, CancellationToken ct = default)
         {
-            var key = $"products/{Guid.NewGuid()}{Path.GetExtension(fileName)}";
+            if (!AllowedExtensions.Contains(extension))
+                throw new BadRequestException("Invalid image extension.");
+
+            var key = $"products/{Guid.NewGuid()}{extension}";
             await _s3.PutObjectAsync(new PutObjectRequest
             {
                 BucketName = _bucket,
