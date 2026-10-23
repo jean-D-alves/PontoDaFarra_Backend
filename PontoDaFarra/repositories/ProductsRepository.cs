@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using PontoDaFarra.context;
+using PontoDaFarra.DTOs.Products;
 using PontoDaFarra.models;
 using PontoDaFarra.repositories.Interface;
 
@@ -27,23 +28,34 @@ namespace PontoDaFarra.repositories
         }
 
 
-        public async Task<(List<Product> Items, int Total)> SearchProductsAsync(string term, int page, int pageSize)
+        public async Task<(List<Product> Items, int Total)> SearchProductsAsync(
+            SearchQuery filter, int page, int pageSize)
         {
-            string pattern = $"%{EscapeLike(term.Trim())}%";
+            IQueryable<Product> query = context.Products.AsNoTracking();
 
-            IQueryable<Product> query = context
-            .Products
-            .AsNoTracking()
-            .Where(p => EF.Functions.ILike(p.Name, pattern)
-            || (p.Description != null && EF.Functions.ILike(p.Description, pattern)));
+            if (!string.IsNullOrWhiteSpace(filter.name))
+            {
+                string pattern = $"%{EscapeLike(filter.name.Trim())}%";
+                query = query.Where(p => EF.Functions.ILike(p.Name, pattern)
+                    || (p.Description != null && EF.Functions.ILike(p.Description, pattern)));
+            }
+
+            if (!filter.IncludeUnavailable)
+                query = query.Where(p => p.IsAvailable);
+
+            if (filter.OnlyPromos)
+                query = query.Where(p => p.IsPromotional);
+
+            if (filter.Below.HasValue)
+                query = query.Where(p => p.Value <= filter.Below.Value);
 
             int total = await query.CountAsync();
 
             List<Product> items = await query
-            .OrderBy(p => p.Name)
-            .Skip((page - 1) * pageSize)
-            .Take(pageSize)
-            .ToListAsync();
+                .OrderBy(p => p.Name)
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .ToListAsync();
 
             return (items, total);
         }

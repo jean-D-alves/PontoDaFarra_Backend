@@ -1,3 +1,4 @@
+using PontoDaFarra.DTOs.Products;
 using PontoDaFarra.models;
 
 namespace PontoDaFarra.repositories.Interface
@@ -6,7 +7,7 @@ namespace PontoDaFarra.repositories.Interface
     {
         Task<Product> CreateProductAsync(Product product);
         Task<Product?> GetProductByIdAsync(Guid productId);
-        Task<(List<Product> Items, int Total)> SearchProductsAsync(string term, int page, int pageSize);
+        Task<(List<Product> Items, int Total)> SearchProductsAsync(SearchQuery filter, int page, int pageSize);
         Task<Product> UpdateProductAsync(Product product);
         Task<Product> DeleteProductAsync(Product product);
     }

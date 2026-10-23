@@ -31,9 +31,10 @@ namespace PontoDaFarra.Controllers
             return Ok(result);
         }
         [HttpGet("search")]
-        public async Task<IActionResult> Search([FromQuery] string name, [FromQuery] int page = 1, [FromQuery] int pageSize = 10)
+        public async Task<IActionResult> Search(
+            [FromQuery] SearchQuery dto)
         {
-            var result = await productService.SearchProductsAsync(name, page, pageSize);
+            var result = await productService.SearchProductsAsync(dto);
             return Ok(result);
         }
         [HttpPut("{productId}")]

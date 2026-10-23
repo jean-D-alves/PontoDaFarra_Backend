@@ -83,11 +83,12 @@ namespace PontoDaFarra.services
 
             return ToResponse(product, imageStorage);
         }
-        public async Task<PagedResponse<ProductResponse>> SearchProductsAsync(string name, int page, int pageSize)
+        public async Task<PagedResponse<ProductResponse>> SearchProductsAsync(SearchQuery search)
         {
-            page = Math.Max(page, 1);
-            pageSize = Math.Clamp(pageSize, 1, 50);
-            var (items, total) = await productsRepository.SearchProductsAsync(name ?? string.Empty, page, pageSize);
+            int page = Math.Max(search.page, 1);
+            int pageSize = Math.Clamp(search.pageSize, 1, 50);
+
+            var (items, total) = await productsRepository.SearchProductsAsync(search, page, pageSize);
 
             return new PagedResponse<ProductResponse>
             {
