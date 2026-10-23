@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using PontoDaFarra.DTOs.Products;
+using PontoDaFarra.services;
 using PontoDaFarra.services.Interface;
 
 namespace PontoDaFarra.Controllers
@@ -54,6 +55,25 @@ namespace PontoDaFarra.Controllers
             if (result is null)
                 return NotFound();
 
+            return Ok(result);
+        }
+        [HttpPatch("{productId}/availability")]
+        [Authorize(Roles = "Admin")]
+        public async Task<IActionResult> UpdateAvailability(Guid productId)
+        {
+            var result = await productService.UpdateIsAvailableAsync(productId);
+            if (result is null)
+                return NotFound();
+
+            return Ok(result);
+        }
+        [HttpPatch("{productId}/promotional")]
+        [Authorize(Roles = "Admin")]
+        public async Task<IActionResult> UpdatePromotional(Guid productId, [FromBody] PromotionalRequest isPromotional)
+        {
+            var result = await productService.UpdateIsPromotionalAsync(isPromotional, productId);
+            if (result is null)
+                return NotFound();
             return Ok(result);
         }
     }

@@ -10,7 +10,7 @@ namespace PontoDaFarra.models
         public Guid ProductId { get; set; }
         public required String Name { get; set; }
         public String? Description { get; set; }
-        public required String Value { get; set; }
+        public decimal Value { get; set; }
         public bool IsAvailable { get; set; } = true;
         public bool IsPromotional { get; set; } = false;
         public String? ImageUrl { get; set; }

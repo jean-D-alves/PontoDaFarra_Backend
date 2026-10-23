@@ -17,6 +17,19 @@ namespace PontoDaFarra.services
     {
         private const long MaxImageSize = 5 * 1024 * 1024;
 
+        private static ProductResponse ToResponse(Product product, IImageStorage imageStorage) =>
+            new()
+            {
+                ProductId = product.ProductId,
+                Name = product.Name,
+                Description = product.Description,
+                Value = product.Value,
+                IsAvailable = product.IsAvailable,
+                IsPromotional = product.IsPromotional,
+                ImageUrl = product.ImageUrl is null ? null : imageStorage.GetPublicUrl(product.ImageUrl),
+                CategoryId = product.CategoryId
+            };
+
         public async Task<ProductResponse> CreateProductAsync(CreateProductRequest dto)
         {
             if (dto.CategoryId == Guid.Empty)
@@ -53,15 +66,7 @@ namespace PontoDaFarra.services
 
                 await productsRepository.CreateProductAsync(product);
 
-                return new ProductResponse
-                {
-                    ProductId = product.ProductId,
-                    Name = product.Name,
-                    Description = product.Description,
-                    Value = product.Value,
-                    ImageUrl = imageKey is null ? null : imageStorage.GetPublicUrl(imageKey),
-                    CategoryId = product.CategoryId
-                };
+                return ToResponse(product, imageStorage);
             }
             catch
             {
@@ -76,15 +81,7 @@ namespace PontoDaFarra.services
             if (product is null)
                 throw new KeyNotFoundException("Produto não encontrado.");
 
-            return new ProductResponse
-            {
-                ProductId = product.ProductId,
-                Name = product.Name,
-                Description = product.Description,
-                Value = product.Value,
-                ImageUrl = product.ImageUrl is null ? null : imageStorage.GetPublicUrl(product.ImageUrl),
-                CategoryId = product.CategoryId
-            };
+            return ToResponse(product, imageStorage);
         }
         public async Task<PagedResponse<ProductResponse>> SearchProductsAsync(string name, int page, int pageSize)
         {
@@ -94,15 +91,7 @@ namespace PontoDaFarra.services
 
             return new PagedResponse<ProductResponse>
             {
-                Items = items.Select(product => new ProductResponse
-                {
-                    ProductId = product.ProductId,
-                    Name = product.Name,
-                    Description = product.Description,
-                    Value = product.Value,
-                    ImageUrl = product.ImageUrl is null ? null : imageStorage.GetPublicUrl(product.ImageUrl),
-                    CategoryId = product.CategoryId
-                }).ToList(),
+                Items = items.Select(product => ToResponse(product, imageStorage)).ToList(),
                 Page = page,
                 PageSize = pageSize,
                 TotalItems = total
@@ -140,22 +129,41 @@ namespace PontoDaFarra.services
 
             product.Name = dto.Name ?? product.Name;
             product.Description = dto.Description ?? product.Description;
-            product.Value = dto.Value ?? product.Value;
+            product.Value = dto.Value != 0 ? dto.Value : product.Value;
             product.CategoryId = dto.CategoryId;
             product.ImageUrl = imageKey;
 
             await productsRepository.UpdateProductAsync(product);
 
-            return new ProductResponse
-            {
-                ProductId = product.ProductId,
-                Name = product.Name,
-                Description = product.Description,
-                Value = product.Value,
-                ImageUrl = imageKey is null ? null : imageStorage.GetPublicUrl(imageKey),
-                CategoryId = product.CategoryId
-            };
+            return ToResponse(product, imageStorage);
         }
+
+        public async Task<ProductResponse> UpdateIsAvailableAsync(Guid productId)
+        {
+            var product = await productsRepository.GetProductByIdAsync(productId);
+            if (product is null)
+                throw new KeyNotFoundException("Produto não encontrado.");
+
+            product.IsAvailable = !product.IsAvailable;
+
+            await productsRepository.UpdateProductAsync(product);
+
+            return ToResponse(product, imageStorage);
+        }
+
+        public async Task<ProductResponse> UpdateIsPromotionalAsync(PromotionalRequest dto, Guid productId)
+        {
+            var product = await productsRepository.GetProductByIdAsync(productId);
+            if (product is null)
+                throw new KeyNotFoundException("Produto não encontrado.");
+            product.IsPromotional = dto.isPromotional;
+            product.Value = dto.PromotionalValue;
+
+            await productsRepository.UpdateProductAsync(product);
+
+            return ToResponse(product, imageStorage);
+        }
+
         public async Task<ProductResponse> DeleteProductAsync(Guid productId)
         {
             var product = await productsRepository.GetProductByIdAsync(productId);
@@ -167,15 +175,7 @@ namespace PontoDaFarra.services
             if (product.ImageUrl is not null)
                 await imageStorage.DeleteAsync(product.ImageUrl);
 
-            return new ProductResponse
-            {
-                ProductId = product.ProductId,
-                Name = product.Name,
-                Description = product.Description,
-                Value = product.Value,
-                ImageUrl = product.ImageUrl is null ? null : imageStorage.GetPublicUrl(product.ImageUrl),
-                CategoryId = product.CategoryId
-            };
+            return ToResponse(product, imageStorage);
         }
     }
 }

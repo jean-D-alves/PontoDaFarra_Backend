@@ -62,9 +62,8 @@ namespace PontoDaFarra.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
-                    b.Property<string>("Value")
-                        .IsRequired()
-                        .HasColumnType("text");
+                    b.Property<decimal>("Value")
+                        .HasColumnType("numeric");
 
                     b.HasKey("ProductId");
 
