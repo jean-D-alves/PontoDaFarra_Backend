@@ -1,27 +1,38 @@
 # AGENTS.md
 
-## Project Overview
-Backend for Ponto da Farra
+## Visão geral
+Backend da Ponto da Farra (API REST).
 
 ## Stack
-- Asp.net 
-- Net10.0
-- postgres
+- ASP.NET Core, .NET 10
+- PostgreSQL com EF Core
+- Docker / docker-compose
 
-## Estrutura de pastas
-- /Controller: so HTTP
-- /Services: regras de negócio
-- /repositories: banco de dados
-- /models: modelo de tabelas
-- */Interface: Interface para busca
+## Comandos
+- Build: `dotnet build`
+- Testes: `dotnet test`
+- Subir ambiente: `docker compose up -d`
 
-## Padrão de codigo
-- nomes em inglês, camelCase
-- funções com ate 20 linhas
-- nada de logica no controller
+## Arquitetura (Controller → Service → Repository)
+- `Controllers/`: apenas HTTP (receber, validar entrada, devolver resposta)
+- `Services/`: regras de negócio
+- `Repositories/`: acesso ao banco
+- `Models/`: entidades das tabelas
+- Controllers devolvem DTOs, nunca entidades
 
-## Restrictions
-- Não instalar dependências sem aprovação.
-- Não mexer em migrations
-- Não modificar `package.json` diretamente.
-- Não usar `console.log` em produção.
+## Padrão de código
+- Nomes em inglês
+- PascalCase: classes, métodos, propriedades. camelCase: variáveis locais e parâmetros. Interfaces com prefixo `I`
+- Métodos com até 20 linhas (exceto `Program.cs`)
+- Nenhuma lógica de negócio no controller
+- Métodos de I/O sempre async
+
+## Segurança
+- Nunca logar tokens, senhas ou dados sensíveis
+- Não enfraquecer rate limiting nem as regras de autenticação
+- Secrets apenas por variável de ambiente
+
+## Restrições
+- Não instalar pacotes sem aprovação
+- Não criar nem alterar migrations; se o model mudar, avisar para eu criar
+- Não usar `Console.WriteLine` em produção; usar `ILogger`
