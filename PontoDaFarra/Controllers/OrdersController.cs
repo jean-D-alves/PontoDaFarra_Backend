@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using PontoDaFarra.DTOs.Global;
 using PontoDaFarra.DTOs.Orders;
 using PontoDaFarra.services.Interface;
+using PontoDaFarra.Filters;
 
 namespace PontoDaFarra.Controllers
 {
@@ -11,6 +12,7 @@ namespace PontoDaFarra.Controllers
     public class OrdersController(IOrderService orderService) : ControllerBase
     {
         [HttpPost]
+        [ApiKey]
         [Authorize]
         public async Task<IActionResult> Create([FromBody] CreateOrderRequest request)
         {
@@ -29,6 +31,7 @@ namespace PontoDaFarra.Controllers
         }
 
         [HttpDelete("{orderId}")]
+        [ApiKey]
         [Authorize]
         public async Task<IActionResult> Delete(Guid orderId)
         {

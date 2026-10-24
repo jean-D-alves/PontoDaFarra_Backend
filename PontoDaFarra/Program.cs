@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Http.Features;
+using Microsoft.OpenApi;
 using PontoDaFarra.Extensions;
 using PontoDaFarra.Middleware;
 using PontoDaFarra.Services;
@@ -32,12 +33,32 @@ builder.Services.AddApplicationServices(builder.Environment);
 builder.Services.AddAuthorization();
 builder.Services.AddCorsPolicy(frontend);
 builder.Services.AddControllers();
-builder.Services.AddSwaggerGen();
+builder.Services.AddSwaggerGen(options =>
+{
+    options.AddSecurityDefinition("ApiKey", new OpenApiSecurityScheme
+    {
+        Name = "X-Api-Key",
+        Type = SecuritySchemeType.ApiKey,
+        In = ParameterLocation.Header,
+        Description = "Chave de API necessária para as rotas de escrita."
+    });
+
+    options.AddSecurityRequirement(document => new OpenApiSecurityRequirement
+    {
+        [new OpenApiSecuritySchemeReference("ApiKey", document)] = []
+    });
+});
 builder.Services.AddOptions();
 builder.Services.AddErrorHandling();
 builder.Services.AddDatabase(builder.Configuration);
 
 var app = builder.Build();
+
+if (string.IsNullOrWhiteSpace(app.Configuration["ApiKey"]))
+{
+    app.Logger.LogWarning(
+        "ApiKey não configurada. As requisições às rotas protegidas serão recusadas.");
+}
 
 app.UseExceptionHandler();
 

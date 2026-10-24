@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Mvc;
 using PontoDaFarra.DTOs.User;
 using PontoDaFarra.Exceptions;
 using PontoDaFarra.services.Interface;
+using PontoDaFarra.Filters;
 
 namespace PontoDaFarra.Controllers
 {
@@ -14,6 +15,7 @@ namespace PontoDaFarra.Controllers
     public class UserController(IUserService userServices) : ControllerBase
     {
         [HttpPut]
+        [ApiKey]
         public async Task<IActionResult> UpdateUser([FromBody] UpdateUser dto)
         {
             var userId = GetUserId();
@@ -22,6 +24,7 @@ namespace PontoDaFarra.Controllers
         }
 
         [HttpPut("{Userid:guid}")]
+        [ApiKey]
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> UpdateUserById(Guid Userid)
         {
@@ -32,6 +35,7 @@ namespace PontoDaFarra.Controllers
         }
 
         [HttpDelete]
+        [ApiKey]
         public async Task<IActionResult> DeleteUser()
         {
             var userId = GetUserId();
@@ -40,6 +44,7 @@ namespace PontoDaFarra.Controllers
         }
 
         [HttpDelete("{id:guid}")]
+        [ApiKey]
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> DeleteUserById(Guid id)
         {

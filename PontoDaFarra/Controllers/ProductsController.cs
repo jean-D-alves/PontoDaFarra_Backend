@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Mvc;
 using PontoDaFarra.DTOs.Products;
 using PontoDaFarra.services;
 using PontoDaFarra.services.Interface;
+using PontoDaFarra.Filters;
 
 namespace PontoDaFarra.Controllers
 {
@@ -15,6 +16,7 @@ namespace PontoDaFarra.Controllers
     public class ProductsController(IProductService productService) : ControllerBase
     {
         [HttpPost]
+        [ApiKey]
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Create([FromForm] CreateProductRequest dto)
         {
@@ -38,6 +40,7 @@ namespace PontoDaFarra.Controllers
             return Ok(result);
         }
         [HttpPut("{productId}")]
+        [ApiKey]
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Update(Guid productId, [FromForm] CreateProductRequest dto)
         {
@@ -49,6 +52,7 @@ namespace PontoDaFarra.Controllers
         }
 
         [HttpDelete("{productId}")]
+        [ApiKey]
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Delete(Guid productId)
         {
@@ -59,6 +63,7 @@ namespace PontoDaFarra.Controllers
             return Ok(result);
         }
         [HttpPatch("{productId}/availability")]
+        [ApiKey]
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> UpdateAvailability(Guid productId)
         {
@@ -69,6 +74,7 @@ namespace PontoDaFarra.Controllers
             return Ok(result);
         }
         [HttpPatch("{productId}/promotional")]
+        [ApiKey]
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> UpdatePromotional(Guid productId, [FromBody] PromotionalRequest isPromotional)
         {

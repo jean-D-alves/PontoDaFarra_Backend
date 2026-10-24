@@ -144,6 +144,7 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IProductService, ProductService>();
         services.AddScoped<IOrderRepository, OrderRepository>();
         services.AddScoped<IOrderService, OrderService>();
+        services.AddScoped<IApiKeyService, ApiKeyService>();
         services.AddScoped<AuthCookieService>();
         services.AddHostedService<RefreshTokenCleanupService>();
 

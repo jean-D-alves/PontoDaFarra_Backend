@@ -7,6 +7,7 @@ using PontoDaFarra.DTOs.Auth;
 using PontoDaFarra.DTOs.User;
 using PontoDaFarra.Exceptions;
 using PontoDaFarra.services;
+using PontoDaFarra.Filters;
 
 namespace PontoDaFarra.controllers
 {
@@ -20,6 +21,7 @@ namespace PontoDaFarra.controllers
     {
 
         [HttpPost("register")]
+        [ApiKey]
         [AllowAnonymous]
         [EnableRateLimiting("auth")]
         public async Task<IActionResult> Register(UserCreate dto)
@@ -32,6 +34,7 @@ namespace PontoDaFarra.controllers
         }
 
         [HttpPost("login")]
+        [ApiKey]
         [AllowAnonymous]
         [EnableRateLimiting("auth")]
         public async Task<IActionResult> Login(LoginRequest request)
@@ -44,6 +47,7 @@ namespace PontoDaFarra.controllers
         }
 
         [HttpPost("refresh")]
+        [ApiKey]
         [AllowAnonymous]
         [EnableRateLimiting("auth")]
         public async Task<IActionResult> Refresh(RefreshRequest? request)
@@ -61,6 +65,7 @@ namespace PontoDaFarra.controllers
         }
 
         [HttpPost("logout")]
+        [ApiKey]
         [AllowAnonymous]
         public async Task<IActionResult> Logout(RefreshRequest? request)
         {

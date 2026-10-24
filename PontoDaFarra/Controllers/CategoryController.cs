@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Mvc;
 using PontoDaFarra.DTOs.Category;
 using PontoDaFarra.DTOs.Global;
 using PontoDaFarra.services.Interface;
+using PontoDaFarra.Filters;
 
 namespace PontoDaFarra.Controllers
 {
@@ -15,6 +16,7 @@ namespace PontoDaFarra.Controllers
     public class CategoryController(ICategoryServices categoryServices) : ControllerBase
     {
         [HttpPost]
+        [ApiKey]
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> CreateCategory([FromBody] CreateCategoryRequest dto)
         {
@@ -59,6 +61,7 @@ namespace PontoDaFarra.Controllers
         }
 
         [HttpPut("{categoryId}")]
+        [ApiKey]
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> UpdateCategory(Guid categoryId, [FromBody] CreateCategoryRequest dto)
         {
@@ -73,6 +76,7 @@ namespace PontoDaFarra.Controllers
             }
         }
         [HttpDelete("{categoryId}")]
+        [ApiKey]
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> DeleteCategory(Guid categoryId)
         {
