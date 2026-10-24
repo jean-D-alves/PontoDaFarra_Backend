@@ -142,6 +142,8 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IProductsRepository, ProductsRepository>();
         services.AddScoped<ICategoryServices, CategoryServices>();
         services.AddScoped<IProductService, ProductService>();
+        services.AddScoped<IOrderRepository, OrderRepository>();
+        services.AddScoped<IOrderService, OrderService>();
         services.AddScoped<AuthCookieService>();
         services.AddHostedService<RefreshTokenCleanupService>();
 
