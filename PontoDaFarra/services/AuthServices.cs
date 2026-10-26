@@ -18,9 +18,6 @@ public class AuthServices(
 
         if (user is null || !PasswordService.VerifyPassword(request.Password, user.Password))
             throw new UnauthorizedException("Invalid email or password");
-
-        await refreshTokenRepository.RevokeAllByUserIdAsync(user.UserId);
-
         var accessToken = tokenService.GenerateAccessToken(user.UserId, user.Email, user.Name, user.PhoneNumber, [user.Role]);
         var refreshToken = tokenService.GenerateRefreshToken();
 
