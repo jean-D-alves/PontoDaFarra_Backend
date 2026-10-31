@@ -35,9 +35,13 @@ namespace PontoDaFarra.Controllers
             return Ok(response);
         }
         [HttpGet("name/{name}")]
-        public async Task<IActionResult> GetCategoryByName(string name)
+        public async Task<ActionResult<CategoryWithProductsPagedResponse>> GetCategoryByName(
+            string name,
+            [FromQuery] int page = 1,
+            [FromQuery] int pageSize = 10)
         {
-            CategoryResponse? response = await categoryServices.GetCategoryByNameAsync(name);
+            CategoryWithProductsPagedResponse? response =
+                await categoryServices.GetCategoryByNameAsync(name, page, pageSize);
 
             if (response is null)
                 return NotFound();

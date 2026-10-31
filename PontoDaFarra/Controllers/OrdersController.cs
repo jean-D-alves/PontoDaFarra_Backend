@@ -57,6 +57,13 @@ namespace PontoDaFarra.Controllers
             return Ok(result);
         }
 
+        [HttpGet("more-order")]
+        public async Task<IActionResult> GetMoreOrder()
+        {
+            var result = await orderService.GetProductsMoreOrder();
+            return Ok(result);
+        }
+
         private Guid GetUserId()
         {
             var claim = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)

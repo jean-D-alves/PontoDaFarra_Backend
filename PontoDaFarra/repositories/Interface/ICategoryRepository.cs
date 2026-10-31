@@ -10,7 +10,8 @@ namespace PontoDaFarra.repositories.Interface
     {
         Task<Category> CreateCategoryAsync(Category category);
         Task<Category?> GetCategoryByIdAsync(Guid categoryId);
-        Task<Category?> GetCategoryByNameAsync(string name);
+        Task<(Category? Category, List<Product> Products, int Total)> GetCategoryWithProductsPagedAsync(
+            string name, int page, int pageSize);
         Task<Category> UpdateCategoryAsync(Category category);
         Task<Category> DeleteCategoryAsync(Category category);
         Task<List<Category>> GetAllCategoriesAsync();

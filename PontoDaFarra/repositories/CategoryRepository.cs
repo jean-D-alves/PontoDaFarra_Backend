@@ -23,10 +23,25 @@ namespace PontoDaFarra.repositories
             Category? category = await context.Categories.AsNoTracking().FirstOrDefaultAsync(c => c.CategoryId == categoryId);
             return category;
         }
-        public async Task<Category?> GetCategoryByNameAsync(string name)
+        public async Task<(Category? Category, List<Product> Products, int Total)> GetCategoryWithProductsPagedAsync(
+            string name, int page, int pageSize)
         {
-            Category? category = await context.Categories.AsNoTracking().FirstOrDefaultAsync(c => c.Name == name);
-            return category;
+            Category? category = await context.Categories.AsNoTracking()
+                .FirstOrDefaultAsync(c => c.Name == name);
+
+            if (category is null)
+                return (null, [], 0);
+
+            IQueryable<Product> query = context.Products.AsNoTracking()
+                .Where(p => p.CategoryId == category.CategoryId);
+
+            int total = await query.CountAsync();
+            List<Product> products = await query
+                .OrderBy(p => p.Name)
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .ToListAsync();
+            return (category, products, total);
         }
         public async Task<Category> UpdateCategoryAsync(Category category)
         {
@@ -54,7 +69,7 @@ namespace PontoDaFarra.repositories
             int total = await query.CountAsync();
 
             List<Category> items = await query
-                .OrderBy(c => c.Name)                  // ordem obrigatória para paginar
+                .OrderBy(c => c.Name)                  
                 .Skip((page - 1) * pageSize)
                 .Take(pageSize)
                 .Include(c => c.Products

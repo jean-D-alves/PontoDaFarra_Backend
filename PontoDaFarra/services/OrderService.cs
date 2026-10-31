@@ -143,6 +143,28 @@ namespace PontoDaFarra.services
             };
         }
 
+        public async Task<OrderMoreResponse> GetProductsMoreOrder()
+        {
+            var to = DateTime.UtcNow;
+            var from = to.AddDays(-30);
+            var items = await orderRepository.GetItemsForChartAsync(from, to);
+            var byOrderCount = items
+                .GroupBy(i => new { i.ProductId, i.ProductName, i.OrderId })
+                .GroupBy(g => new { g.Key.ProductId, g.Key.ProductName })
+                .Select(g => new TopProductByOrderCount
+                {
+                    ProductId = g.Key.ProductId,
+                    ProductName = g.Key.ProductName,
+                    OrderCount = g.Count()
+                })
+                .OrderByDescending(x => x.OrderCount)
+                .ToList();
+            return new OrderMoreResponse
+            {
+                ByOrderCount = byOrderCount
+            };
+        }
+
         private static OrderResponse MapOrder(Order order) => new()
         {
             OrderId = order.OrderId,
@@ -157,6 +179,7 @@ namespace PontoDaFarra.services
                 Quantity = i.Quantity,
                 UnitPrice = i.UnitPrice
             }).ToList()
+
         };
 
         private static OrderListItemResponse MapOrderList(Order order) => new()

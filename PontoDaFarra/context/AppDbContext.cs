@@ -17,6 +17,12 @@ public class AppDbContext : DbContext
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
+        modelBuilder.HasPostgresExtension("pg_trgm");
+
+        modelBuilder.Entity<Product>()
+            .HasIndex(p => p.Name)
+            .HasMethod("gin")
+            .HasOperators("gin_trgm_ops");
         modelBuilder.Entity<User>(e =>
         {
             e.HasIndex(x => x.Email).IsUnique();

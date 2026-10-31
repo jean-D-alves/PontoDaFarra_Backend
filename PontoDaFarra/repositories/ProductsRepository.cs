@@ -32,13 +32,22 @@ namespace PontoDaFarra.repositories
             SearchQuery filter, int page, int pageSize)
         {
             IQueryable<Product> query = context.Products.AsNoTracking();
+            string? term = null;
 
             if (!string.IsNullOrWhiteSpace(filter.name))
             {
-                string pattern = $"%{EscapeLike(filter.name.Trim())}%";
-                query = query.Where(p => EF.Functions.ILike(p.Name, pattern)
-                    || (p.Description != null && EF.Functions.ILike(p.Description, pattern)));
+                term = filter.name.Trim();
+                string pattern = $"%{EscapeLike(term)}%";
+
+                // Com 3+ caracteres, aceita também nomes parecidos (erro de digitação)
+                bool useFuzzy = term.Length >= 3;
+
+                query = query.Where(p =>
+                    EF.Functions.ILike(p.Name, pattern)
+                    || (p.Description != null && EF.Functions.ILike(p.Description, pattern))
+                    || (useFuzzy && EF.Functions.TrigramsWordSimilarity(term, p.Name) > 0.5));
             }
+
 
             if (!filter.IncludeUnavailable)
                 query = query.Where(p => p.IsAvailable);
@@ -51,8 +60,14 @@ namespace PontoDaFarra.repositories
 
             int total = await query.CountAsync();
 
-            List<Product> items = await query
-                .OrderBy(p => p.Name)
+            IOrderedQueryable<Product> ordered = term is null
+                ? query.OrderBy(p => p.Name)
+                : query
+                    .OrderByDescending(p => EF.Functions.ILike(p.Name, $"%{EscapeLike(term)}%"))
+                    .ThenByDescending(p => EF.Functions.TrigramsWordSimilarity(term, p.Name))
+                    .ThenBy(p => p.Name);
+
+            List<Product> items = await ordered
                 .Skip((page - 1) * pageSize)
                 .Take(pageSize)
                 .ToListAsync();

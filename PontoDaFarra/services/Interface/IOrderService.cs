@@ -13,5 +13,6 @@ namespace PontoDaFarra.services.Interface
         Task DeleteOrderAsync(Guid callerId, bool isAdmin, Guid orderId);
         Task<PagedResponse<AdminOrderResponse>> GetAllOrdersAsync(int page, int pageSize);
         Task<OrderChartResponse> GetChartAsync();
+        Task<OrderMoreResponse> GetProductsMoreOrder();
     }
 }
