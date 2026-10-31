@@ -158,6 +158,7 @@ namespace PontoDaFarra.services
                     OrderCount = g.Count()
                 })
                 .OrderByDescending(x => x.OrderCount)
+                .Take(6)
                 .ToList();
             return new OrderMoreResponse
             {
