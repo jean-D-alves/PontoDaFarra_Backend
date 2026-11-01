@@ -99,6 +99,22 @@ namespace PontoDaFarra.services
             };
         }
 
+        public async Task<PagedResponse<ProductResponse>> GetAllProductsAsync(int page, int pageSize)
+        {
+            page = Math.Max(page, 1);
+            pageSize = Math.Clamp(pageSize, 1, 50);
+
+            var (items, total) = await productsRepository.GetAllProductsAsync(page, pageSize);
+
+            return new PagedResponse<ProductResponse>
+            {
+                Items = items.Select(product => ToResponse(product, imageStorage)).ToList(),
+                Page = page,
+                PageSize = pageSize,
+                TotalItems = total
+            };
+        }
+
         public async Task<ProductResponse> UpdateProductAsync(Guid productId, CreateProductRequest dto)
         {
             var product = await productsRepository.GetProductByIdAsync(productId);

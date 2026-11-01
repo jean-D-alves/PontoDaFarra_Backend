@@ -32,6 +32,12 @@ namespace PontoDaFarra.Controllers
 
             return Ok(result);
         }
+        [HttpGet("all")]
+        public async Task<IActionResult> GetAll([FromQuery] int page = 1, [FromQuery] int pageSize = 10)
+        {
+            var result = await productService.GetAllProductsAsync(page, pageSize);
+            return Ok(result);
+        }
         [HttpGet("search")]
         public async Task<IActionResult> Search(
             [FromQuery] SearchQuery dto)
