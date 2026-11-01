@@ -14,7 +14,7 @@ namespace PontoDaFarra.services.Interface
         Task<CategoryResponse?> GetCategoryByIdAsync(Guid categoryId);
         Task<CategoryWithProductsPagedResponse?> GetCategoryByNameAsync(
             string name, int page, int pageSize);
-        Task<CategoryResponse> UpdateCategoryAsync(Guid categoryId, CreateCategoryRequest dto);
+        Task<CategoryResponse> UpdateCategoryAsync(Guid categoryId, UpdateCategoryRequest dto);
         Task<CategoryResponse> DeleteCategoryAsync(Guid categoryId);
         Task<List<CategoryResponse>> GetAllCategoriesAsync();
         Task<PagedResponse<CategoryWithProductsResponse>> GetCategoriesWithProductsPagedAsync(

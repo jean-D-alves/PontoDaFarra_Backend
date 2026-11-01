@@ -48,7 +48,7 @@ namespace PontoDaFarra.Controllers
         [HttpPut("{productId}")]
         [ApiKey]
         [Authorize(Roles = "Admin")]
-        public async Task<IActionResult> Update(Guid productId, [FromForm] CreateProductRequest dto)
+        public async Task<IActionResult> Update(Guid productId, [FromForm] UpdateProductRequest dto)
         {
             var result = await productService.UpdateProductAsync(productId, dto);
             if (result is null)

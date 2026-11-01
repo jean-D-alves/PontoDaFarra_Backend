@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Http;
 using PontoDaFarra.DTOs.Global;
 using PontoDaFarra.DTOs.Products;
 using PontoDaFarra.Exceptions;
@@ -35,22 +36,7 @@ namespace PontoDaFarra.services
             if (dto.CategoryId == Guid.Empty)
                 throw new BadRequestException("CategoryId is required.");
 
-            string? imageKey = null;
-
-            if (dto.Image is { Length: > 0 })
-            {
-                if (dto.Image.Length > MaxImageSize)
-                    throw new BadRequestException("The image must be no larger than 5 MB.");
-
-                await using var stream = dto.Image.OpenReadStream();
-
-                var format = ImageSignatureValidator.Detect(stream)
-                    ?? throw new BadRequestException("Invalid image content. Use JPEG, PNG, or WebP.");
-
-                if (stream.CanSeek) stream.Position = 0;
-
-                imageKey = await imageStorage.UploadAsync(stream, format.Extension, format.ContentType);
-            }
+            string? imageKey = await TryUploadImageAsync(dto.Image);
 
             try
             {
@@ -115,7 +101,7 @@ namespace PontoDaFarra.services
             };
         }
 
-        public async Task<ProductResponse> UpdateProductAsync(Guid productId, CreateProductRequest dto)
+        public async Task<ProductResponse> UpdateProductAsync(Guid productId, UpdateProductRequest dto)
         {
             var product = await productsRepository.GetProductByIdAsync(productId);
             if (product is null)
@@ -124,35 +110,57 @@ namespace PontoDaFarra.services
             if (dto.CategoryId == Guid.Empty)
                 throw new BadRequestException("CategoryId is required.");
 
-            string? imageKey = product.ImageUrl;
+            string? oldImageKey = product.ImageUrl;
+            string? newImageKey = await TryUploadImageAsync(dto.Image);
 
-            if (dto.Image is { Length: > 0 })
-            {
-                if (dto.Image.Length > MaxImageSize)
-                    throw new BadRequestException("The image must be no larger than 5 MB.");
-
-                await using var stream = dto.Image.OpenReadStream();
-
-                var format = ImageSignatureValidator.Detect(stream)
-                    ?? throw new BadRequestException("Invalid image content. Use JPEG, PNG, or WebP.");
-
-                if (stream.CanSeek) stream.Position = 0;
-
-                imageKey = await imageStorage.UploadAsync(stream, format.Extension, format.ContentType);
-
-                if (product.ImageUrl is not null)
-                    await imageStorage.DeleteAsync(product.ImageUrl);
-            }
-
-            product.Name = dto.Name ?? product.Name;
-            product.Description = dto.Description ?? product.Description;
-            product.Value = dto.Value != 0 ? dto.Value : product.Value;
-            product.CategoryId = dto.CategoryId;
-            product.ImageUrl = imageKey;
-
-            await productsRepository.UpdateProductAsync(product);
+            ApplyChanges(product, dto, newImageKey);
+            await SaveWithImageCleanupAsync(product, oldImageKey, newImageKey);
 
             return ToResponse(product, imageStorage);
+        }
+
+        private async Task SaveWithImageCleanupAsync(Product product, string? oldImageKey, string? newImageKey)
+        {
+            try
+            {
+                await productsRepository.UpdateProductAsync(product);
+            }
+            catch
+            {
+                if (newImageKey is not null)
+                    await imageStorage.DeleteAsync(newImageKey);
+                throw;
+            }
+
+            if (newImageKey is not null && oldImageKey is not null)
+                await imageStorage.DeleteAsync(oldImageKey);
+        }
+
+        private static void ApplyChanges(Product product, UpdateProductRequest dto, string? newImageKey)
+        {
+            if (dto.Name is not null) product.Name = dto.Name;
+            if (dto.Description is not null) product.Description = dto.Description;
+            if (dto.Value.HasValue) product.Value = dto.Value.Value;
+            if (dto.CategoryId.HasValue) product.CategoryId = dto.CategoryId.Value;
+            if (newImageKey is not null) product.ImageUrl = newImageKey;
+        }
+
+        private async Task<string?> TryUploadImageAsync(IFormFile? image)
+        {
+            if (image is not { Length: > 0 })
+                return null;
+
+            if (image.Length > MaxImageSize)
+                throw new BadRequestException("The image must be no larger than 5 MB.");
+
+            await using var stream = image.OpenReadStream();
+
+            var format = ImageSignatureValidator.Detect(stream)
+                ?? throw new BadRequestException("Invalid image content. Use JPEG, PNG, or WebP.");
+
+            if (stream.CanSeek) stream.Position = 0;
+
+            return await imageStorage.UploadAsync(stream, format.Extension, format.ContentType);
         }
 
         public async Task<ProductResponse> UpdateIsAvailableAsync(Guid productId)

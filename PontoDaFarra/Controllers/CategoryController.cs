@@ -67,7 +67,7 @@ namespace PontoDaFarra.Controllers
         [HttpPut("{categoryId}")]
         [ApiKey]
         [Authorize(Roles = "Admin")]
-        public async Task<IActionResult> UpdateCategory(Guid categoryId, [FromBody] CreateCategoryRequest dto)
+        public async Task<IActionResult> UpdateCategory(Guid categoryId, [FromBody] UpdateCategoryRequest dto)
         {
             try
             {

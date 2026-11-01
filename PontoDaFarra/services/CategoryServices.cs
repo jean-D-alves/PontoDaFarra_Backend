@@ -80,14 +80,15 @@ namespace PontoDaFarra.services
                     CategoryId = product.CategoryId
                 }).ToList()
             };
-        public async Task<CategoryResponse> UpdateCategoryAsync(Guid categoryId, CreateCategoryRequest dto)
+        public async Task<CategoryResponse> UpdateCategoryAsync(Guid categoryId, UpdateCategoryRequest dto)
         {
             Category? existingCategory = await categoryRepository.GetCategoryByIdAsync(categoryId);
 
             if (existingCategory is null)
                 throw new ArgumentException("Category not found.");
 
-            existingCategory.Name = NormalizeName(dto.Name);
+            if (dto.Name is not null)
+                existingCategory.Name = NormalizeName(dto.Name);
 
             Category updatedCategory = await categoryRepository.UpdateCategoryAsync(existingCategory);
 
