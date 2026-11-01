@@ -12,7 +12,7 @@ namespace PontoDaFarra.DTOs.Products
         public required String Name { get; set; }
         [StringLength(240)] 
         public String? Description { get; set; }
-        [Required, StringLength(50)]
+        [Range(0, 99999999.99)]
         public decimal Value { get; set; }
         public IFormFile? Image { get; set; }
         public required Guid CategoryId { get; set; }
