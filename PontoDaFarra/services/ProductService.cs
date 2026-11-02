@@ -85,12 +85,12 @@ namespace PontoDaFarra.services
             };
         }
 
-        public async Task<PagedResponse<ProductResponse>> GetAllProductsAsync(int page, int pageSize)
+        public async Task<PagedResponse<ProductResponse>> GetAllProductsAsync(ProductFilterQuery query)
         {
-            page = Math.Max(page, 1);
-            pageSize = Math.Clamp(pageSize, 1, 50);
+            int page = Math.Max(query.Page, 1);
+            int pageSize = Math.Clamp(query.PageSize, 1, 50);
 
-            var (items, total) = await productsRepository.GetAllProductsAsync(page, pageSize);
+            var (items, total) = await productsRepository.GetAllProductsAsync(query, page, pageSize);
 
             return new PagedResponse<ProductResponse>
             {

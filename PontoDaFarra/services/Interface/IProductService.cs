@@ -11,7 +11,7 @@ namespace PontoDaFarra.services.Interface
     {
         Task<ProductResponse> CreateProductAsync(CreateProductRequest dto);
         Task<ProductResponse> GetProductByIdAsync(Guid productId);
-        Task<PagedResponse<ProductResponse>> GetAllProductsAsync(int page, int pageSize);
+        Task<PagedResponse<ProductResponse>> GetAllProductsAsync(ProductFilterQuery query);
         Task<PagedResponse<ProductResponse>> SearchProductsAsync(SearchQuery search);
         Task<ProductResponse> UpdateProductAsync(Guid productId, UpdateProductRequest dto);
         Task<ProductResponse> UpdateIsAvailableAsync(Guid productId);

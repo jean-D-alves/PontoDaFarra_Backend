@@ -27,9 +27,19 @@ namespace PontoDaFarra.repositories
             return product;
         }
 
-        public async Task<(List<Product> Items, int Total)> GetAllProductsAsync(int page, int pageSize)
+        public async Task<(List<Product> Items, int Total)> GetAllProductsAsync(
+            ProductFilterQuery filter, int page, int pageSize)
         {
             IQueryable<Product> query = context.Products.AsNoTracking();
+
+            if (filter.IsAvailable.HasValue)
+                query = query.Where(p => p.IsAvailable == filter.IsAvailable.Value);
+
+            if (filter.IsPromotional.HasValue)
+                query = query.Where(p => p.IsPromotional == filter.IsPromotional.Value);
+
+            if (filter.CategoryId.HasValue)
+                query = query.Where(p => p.CategoryId == filter.CategoryId.Value);
 
             int total = await query.CountAsync();
 
