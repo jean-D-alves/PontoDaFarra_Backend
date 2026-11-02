@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using PontoDaFarra.DTOs.Global;
 using PontoDaFarra.DTOs.User;
 using PontoDaFarra.Exceptions;
 using PontoDaFarra.models;
@@ -13,6 +14,40 @@ public class UserServices(
     ITokenService tokenService) : IUserService
 {
     private static readonly EmailAddressAttribute EmailValidator = new();
+
+    private static UserAdminResponse ToAdminResponse(User user) =>
+        new()
+        {
+            UserId = user.UserId,
+            Name = user.Name,
+            Email = user.Email,
+            PhoneNumber = user.PhoneNumber,
+            Role = user.Role
+        };
+
+    public async Task<PagedResponse<UserAdminResponse>> GetAllUsersAsync(UserFilterQuery query)
+    {
+        int page = Math.Max(query.Page, 1);
+        int pageSize = Math.Clamp(query.PageSize, 1, 50);
+
+        var (items, total) = await userRepository.GetAllUsersAsync(query, page, pageSize);
+
+        return new PagedResponse<UserAdminResponse>
+        {
+            Items = items.Select(ToAdminResponse).ToList(),
+            Page = page,
+            PageSize = pageSize,
+            TotalItems = total
+        };
+    }
+
+    public async Task<UserAdminResponse> GetUserByIdAsync(Guid userId)
+    {
+        var user = await userRepository.GetUserByIdAsync(userId)
+            ?? throw new NotFoundException("User not found");
+
+        return ToAdminResponse(user);
+    }
 
     public async Task<CreateResponse> CreateUserAsync(UserCreate dto)
     {
