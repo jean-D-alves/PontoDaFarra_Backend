@@ -113,6 +113,7 @@ namespace PontoDaFarra.services
                     Quantity = g.Sum(x => x.Quantity)
                 })
                 .OrderByDescending(x => x.Quantity)
+                .Take(6)
                 .ToList();
             var byValue = items
                 .GroupBy(i => new { i.ProductId, i.ProductName })
@@ -123,6 +124,7 @@ namespace PontoDaFarra.services
                     TotalValue = g.Sum(x => x.Quantity * x.UnitPrice)
                 })
                 .OrderByDescending(x => x.TotalValue)
+                .Take(5)
                 .ToList();
             var byOrderCount = items
                 .GroupBy(i => new { i.ProductId, i.ProductName, i.OrderId })
@@ -134,6 +136,7 @@ namespace PontoDaFarra.services
                     OrderCount = g.Count()
                 })
                 .OrderByDescending(x => x.OrderCount)
+                .Take(6)
                 .ToList();
             return new OrderChartResponse
             {
