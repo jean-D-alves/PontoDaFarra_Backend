@@ -14,22 +14,6 @@ namespace PontoDaFarra.Controllers
     [Authorize]
     public class UserController(IUserService userServices) : ControllerBase
     {
-        [HttpGet("all")]
-        [Authorize(Roles = "Admin")]
-        public async Task<IActionResult> GetAll([FromQuery] UserFilterQuery query)
-        {
-            var result = await userServices.GetAllUsersAsync(query);
-            return Ok(result);
-        }
-
-        [HttpGet("{userId:guid}")]
-        [Authorize(Roles = "Admin")]
-        public async Task<IActionResult> GetById(Guid userId)
-        {
-            var result = await userServices.GetUserByIdAsync(userId);
-            return Ok(result);
-        }
-
         [HttpPut]
         [ApiKey]
         public async Task<IActionResult> UpdateUser([FromBody] UpdateUser dto)
