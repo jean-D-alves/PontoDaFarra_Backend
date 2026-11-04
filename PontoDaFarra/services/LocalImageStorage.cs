@@ -17,7 +17,7 @@ namespace PontoDaFarra.services
         public LocalImageStorage(IConfiguration config)
         {
             _root = config["Storage:Local:Path"] ?? "uploads";
-            _baseUrl = config["Storage:Local:BaseUrl"] ?? "http://localhost:5000/uploads";
+            _baseUrl = config["Storage:Local:BaseUrl"] ?? "http://localhost:8081/uploads";
             Directory.CreateDirectory(_root);
         }
 

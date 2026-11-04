@@ -68,8 +68,6 @@ app.UseDevelopmentTools();
 
 app.UseForwardedHeaders();
 
-app.UseHttpsRedirection();
-
 app.UseCors();
 app.UseRateLimiter();
 app.UseAuthentication();
