@@ -29,7 +29,7 @@ builder.WebHost.ConfigureKestrel(options =>
 builder.Services.AddForwardedHeadersConfiguration();
 builder.Services.AddRateLimiting();
 builder.Services.AddJwtAuthentication(jwtKey, issuer, audience);
-builder.Services.AddApplicationServices(builder.Environment);
+builder.Services.AddApplicationServices();
 builder.Services.AddAuthorization();
 builder.Services.AddCorsPolicy(frontend);
 builder.Services.AddControllers();
@@ -64,7 +64,7 @@ app.UseExceptionHandler();
 
 app.UseMiddleware<ProblemDetailsStatusCodeMiddleware>();
 
-app.UseDevelopmentTools();
+app.UseAppPipeline();
 
 app.UseForwardedHeaders();
 

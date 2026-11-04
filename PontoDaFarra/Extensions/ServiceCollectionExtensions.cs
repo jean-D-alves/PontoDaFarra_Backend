@@ -129,8 +129,7 @@ public static class ServiceCollectionExtensions
     }
 
     public static IServiceCollection AddApplicationServices(
-        this IServiceCollection services,
-        IWebHostEnvironment environment)
+        this IServiceCollection services)
     {
         services.AddScoped<IUserRepository, UserRepository>();
         services.AddScoped<IRefreshTokenRepository, RefreshTokenRepository>();
@@ -148,14 +147,7 @@ public static class ServiceCollectionExtensions
         services.AddScoped<AuthCookieService>();
         services.AddHostedService<RefreshTokenCleanupService>();
 
-        if (environment.IsDevelopment())
-        {
-            services.AddSingleton<IImageStorage, LocalImageStorage>();
-        }
-        else
-        {
-            services.AddSingleton<IImageStorage, R2ImageStorage>();
-        }
+        services.AddSingleton<IImageStorage, LocalImageStorage>();
 
         return services;
     }
