@@ -50,6 +50,16 @@ namespace PontoDaFarra.repositories
 
         public async Task<User> DeleteUserAsync(User user)
         {
+            List<Order> orders = await _context.Orders
+                .Where(o => o.UserId == user.UserId)
+                .ToListAsync();
+
+            foreach (Order order in orders)
+            {
+                order.CustomerName = "Deleted user";
+                order.CustomerPhone = null;
+            }
+
             _context.Users.Remove(user);
             await _context.SaveChangesAsync();
             return user;
