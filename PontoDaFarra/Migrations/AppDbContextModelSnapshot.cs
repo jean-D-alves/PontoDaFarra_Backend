@@ -38,6 +38,52 @@ namespace PontoDaFarra.Migrations
                     b.ToTable("Categories");
                 });
 
+            modelBuilder.Entity("PontoDaFarra.models.Location", b =>
+                {
+                    b.Property<Guid>("LocationId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("City")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<string>("HouseNumber")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<string>("Neighborhood")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<string>("State")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<string>("Street")
+                        .IsRequired()
+                        .HasMaxLength(150)
+                        .HasColumnType("character varying(150)");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("LocationId");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("Locations");
+                });
+
             modelBuilder.Entity("PontoDaFarra.models.Order", b =>
                 {
                     b.Property<Guid>("OrderId")
@@ -204,6 +250,17 @@ namespace PontoDaFarra.Migrations
                         .IsUnique();
 
                     b.ToTable("Users");
+                });
+
+            modelBuilder.Entity("PontoDaFarra.models.Location", b =>
+                {
+                    b.HasOne("PontoDaFarra.models.User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("PontoDaFarra.models.Order", b =>
