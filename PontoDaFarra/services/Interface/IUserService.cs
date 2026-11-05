@@ -9,7 +9,7 @@ namespace PontoDaFarra.services.Interface
 {
     public interface IUserService
     {
-        Task<CreateResponse> CreateUserAsync(UserCreate dto);
+        Task<CreateResponse> CreateUserAsync(UserCreate dto, string? ipAddress = null);
         Task<UserResponse> UpdateUserAsync(Guid userId, UpdateUser dto);
         Task<UserResponse> UpdateUserRoleAsync(Guid adminId, Guid userId);
         Task DeleteUserAsync(Guid userId);

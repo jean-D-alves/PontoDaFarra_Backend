@@ -15,6 +15,8 @@ public class AppDbContext : DbContext
     public DbSet<Order> Orders { get; set; } = null!;
     public DbSet<OrderItem> OrderItems { get; set; } = null!;
     public DbSet<Location> Locations { get; set; } = null!;
+    public DbSet<LegalDocument> LegalDocuments { get; set; } = null!;
+    public DbSet<UserConsent> UserConsents { get; set; } = null!;
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -66,6 +68,30 @@ public class AppDbContext : DbContext
              .WithMany()
              .HasForeignKey(x => x.UserId)
              .OnDelete(DeleteBehavior.Cascade);
+        });
+        modelBuilder.Entity<LegalDocument>(e =>
+        {
+            e.HasKey(x => x.LegalDocumentId);
+            e.Property(x => x.Version).HasMaxLength(20).IsRequired();
+            e.Property(x => x.Content).IsRequired();
+            e.HasIndex(x => new { x.Type, x.Version }).IsUnique();
+            e.HasIndex(x => x.Type).IsUnique().HasFilter("\"IsActive\" = true");
+        });
+        modelBuilder.Entity<UserConsent>(e =>
+        {
+            e.HasKey(x => x.UserConsentId);
+            e.Property(x => x.IpAddress).HasMaxLength(45);
+            e.HasIndex(x => new { x.UserId, x.LegalDocumentId }).IsUnique();
+
+            e.HasOne(x => x.User)
+             .WithMany(u => u.Consents)
+             .HasForeignKey(x => x.UserId)
+             .OnDelete(DeleteBehavior.Cascade);
+
+            e.HasOne(x => x.LegalDocument)
+             .WithMany(d => d.Consents)
+             .HasForeignKey(x => x.LegalDocumentId)
+             .OnDelete(DeleteBehavior.Restrict);
         });
     }
 }

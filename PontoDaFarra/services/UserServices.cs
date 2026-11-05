@@ -10,36 +10,59 @@ namespace PontoDaFarra.services;
 
 public class UserServices(
     IUserRepository userRepository,
+    ILegalService legalService,
     ITokenService tokenService) : IUserService
 {
     private static readonly EmailAddressAttribute EmailValidator = new();
 
-    public async Task<CreateResponse> CreateUserAsync(UserCreate dto)
+    public async Task<CreateResponse> CreateUserAsync(UserCreate dto, string? ipAddress = null)
     {
         var email = dto.Email.Trim().ToLowerInvariant();
-
         ValidatePassword(dto.Password);
 
         if (await userRepository.EmailExistsAsync(email))
             throw new ConflictException("Email already registered");
 
-        var userCreate = new User
+        var userId = Guid.NewGuid();
+        var consents = await legalService.PrepareRegistrationConsentsAsync(
+            userId,
+            dto.LegalDocumentIds,
+            ipAddress);
+
+        var userCreate = BuildUser(dto, email, userId, consents);
+        var refreshToken = tokenService.GenerateRefreshToken();
+        var user = await userRepository.CreateUserAsync(userCreate, BuildRefreshToken(refreshToken));
+        return BuildCreateResponse(user, refreshToken.Token);
+    }
+
+    private static User BuildUser(
+        UserCreate dto,
+        string email,
+        Guid userId,
+        List<UserConsent> consents) => new()
         {
+            UserId = userId,
             Name = dto.Name.Trim(),
             Email = email,
             Password = PasswordService.HashPassword(dto.Password),
-            PhoneNumber = dto.PhoneNumber.Trim()
+            PhoneNumber = dto.PhoneNumber.Trim(),
+            Consents = consents
         };
 
-        var refreshToken = tokenService.GenerateRefreshToken();
+    private static RefreshToken BuildRefreshToken(GeneratedRefreshToken refreshToken) => new()
+    {
+        TokenHash = refreshToken.TokenHash,
+        ExpiresAt = refreshToken.ExpiresAt
+    };
 
-        var user = await userRepository.CreateUserAsync(userCreate, new RefreshToken
-        {
-            TokenHash = refreshToken.TokenHash,
-            ExpiresAt = refreshToken.ExpiresAt
-        });
-
-        var accessToken = tokenService.GenerateAccessToken(user.UserId, user.Email, user.Name, user.PhoneNumber, [user.Role]);
+    private CreateResponse BuildCreateResponse(User user, string refreshToken)
+    {
+        var accessToken = tokenService.GenerateAccessToken(
+            user.UserId,
+            user.Email,
+            user.Name,
+            user.PhoneNumber,
+            [user.Role]);
 
         return new CreateResponse
         {
@@ -48,7 +71,7 @@ public class UserServices(
             Email = user.Email,
             Role = user.Role,
             PhoneNumber = user.PhoneNumber,
-            RefreshToken = refreshToken.Token,
+            RefreshToken = refreshToken,
             AccessToken = accessToken
         };
     }

@@ -38,6 +38,42 @@ namespace PontoDaFarra.Migrations
                     b.ToTable("Categories");
                 });
 
+            modelBuilder.Entity("PontoDaFarra.models.LegalDocument", b =>
+                {
+                    b.Property<Guid>("LegalDocumentId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Content")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("boolean");
+
+                    b.Property<DateTime>("PublishedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("Type")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Version")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
+                    b.HasKey("LegalDocumentId");
+
+                    b.HasIndex("Type")
+                        .IsUnique()
+                        .HasFilter("\"IsActive\" = true");
+
+                    b.HasIndex("Type", "Version")
+                        .IsUnique();
+
+                    b.ToTable("LegalDocuments");
+                });
+
             modelBuilder.Entity("PontoDaFarra.models.Location", b =>
                 {
                     b.Property<Guid>("LocationId")
@@ -252,6 +288,35 @@ namespace PontoDaFarra.Migrations
                     b.ToTable("Users");
                 });
 
+            modelBuilder.Entity("PontoDaFarra.models.UserConsent", b =>
+                {
+                    b.Property<Guid>("UserConsentId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("AcceptedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("IpAddress")
+                        .HasMaxLength(45)
+                        .HasColumnType("character varying(45)");
+
+                    b.Property<Guid>("LegalDocumentId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("UserConsentId");
+
+                    b.HasIndex("LegalDocumentId");
+
+                    b.HasIndex("UserId", "LegalDocumentId")
+                        .IsUnique();
+
+                    b.ToTable("UserConsents");
+                });
+
             modelBuilder.Entity("PontoDaFarra.models.Location", b =>
                 {
                     b.HasOne("PontoDaFarra.models.User", "User")
@@ -314,9 +379,33 @@ namespace PontoDaFarra.Migrations
                     b.Navigation("User");
                 });
 
+            modelBuilder.Entity("PontoDaFarra.models.UserConsent", b =>
+                {
+                    b.HasOne("PontoDaFarra.models.LegalDocument", "LegalDocument")
+                        .WithMany("Consents")
+                        .HasForeignKey("LegalDocumentId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("PontoDaFarra.models.User", "User")
+                        .WithMany("Consents")
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("LegalDocument");
+
+                    b.Navigation("User");
+                });
+
             modelBuilder.Entity("PontoDaFarra.models.Category", b =>
                 {
                     b.Navigation("Products");
+                });
+
+            modelBuilder.Entity("PontoDaFarra.models.LegalDocument", b =>
+                {
+                    b.Navigation("Consents");
                 });
 
             modelBuilder.Entity("PontoDaFarra.models.Order", b =>
@@ -326,6 +415,8 @@ namespace PontoDaFarra.Migrations
 
             modelBuilder.Entity("PontoDaFarra.models.User", b =>
                 {
+                    b.Navigation("Consents");
+
                     b.Navigation("RefreshTokens");
                 });
 #pragma warning restore 612, 618

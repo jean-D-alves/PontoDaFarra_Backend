@@ -19,6 +19,7 @@ namespace PontoDaFarra.models
         public required String PhoneNumber { get; set; }
         public string Role { get; set; } = "Client";
         public ICollection<RefreshToken> RefreshTokens { get; set; } = new List<RefreshToken>();
+        public ICollection<UserConsent> Consents { get; set; } = new List<UserConsent>();
         
     }
 }

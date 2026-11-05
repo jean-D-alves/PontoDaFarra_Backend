@@ -26,7 +26,7 @@ namespace PontoDaFarra.controllers
         [EnableRateLimiting("auth")]
         public async Task<IActionResult> Register(UserCreate dto)
         {
-            var result = await userServices.CreateUserAsync(dto);
+            var result = await userServices.CreateUserAsync(dto, GetIpAddress());
 
             authCookieService.Set(HttpContext, result.AccessToken, result.RefreshToken);
 
@@ -95,5 +95,7 @@ namespace PontoDaFarra.controllers
                 role = User.FindFirstValue(ClaimTypes.Role)
             });
         }
+
+        private string? GetIpAddress() => HttpContext.Connection.RemoteIpAddress?.ToString();
     }
 }

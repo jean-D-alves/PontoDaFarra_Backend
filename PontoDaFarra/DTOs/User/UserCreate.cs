@@ -10,5 +10,8 @@ namespace PontoDaFarra.DTOs.User
         [Required]
         public required String Password { get; set; }
         public required String PhoneNumber { get; set; }
+        [Required]
+        [MinLength(1)]
+        public List<Guid> LegalDocumentIds { get; set; } = [];
     }
 }
