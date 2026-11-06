@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.ChangeTracking;
 using Npgsql;
 using PontoDaFarra.context;
+using PontoDaFarra.DTOs.User;
 using PontoDaFarra.Exceptions;
 using PontoDaFarra.models;
 using PontoDaFarra.repositories.Interface;
@@ -10,6 +11,8 @@ namespace PontoDaFarra.repositories
 {
     public class UserRepository(AppDbContext _context) : IUserRepository
     {
+        private static string EscapeLike(string value) =>
+            value.Replace("\\", "\\\\").Replace("%", "\\%").Replace("_", "\\_");
 
         public async Task<User?> GetUserByIdAsync(Guid userId)
         {
@@ -21,6 +24,38 @@ namespace PontoDaFarra.repositories
         {
             User? user = await _context.Users.FirstOrDefaultAsync(u => u.Email == email);
             return user;
+        }
+
+        public async Task<(List<User> Items, int Total)> GetAllUsersAsync(
+            UserFilterQuery filter, int page, int pageSize)
+        {
+            IQueryable<User> query = _context.Users.AsNoTracking();
+
+            if (!string.IsNullOrWhiteSpace(filter.Role))
+            {
+                string role = filter.Role.Trim();
+                query = query.Where(u => EF.Functions.ILike(u.Role, role));
+            }
+
+            if (!string.IsNullOrWhiteSpace(filter.Search))
+            {
+                string pattern = $"%{EscapeLike(filter.Search.Trim())}%";
+
+                query = query.Where(u =>
+                    EF.Functions.ILike(u.Name, pattern)
+                    || EF.Functions.ILike(u.Email, pattern));
+            }
+
+            int total = await query.CountAsync();
+
+            List<User> items = await query
+                .OrderBy(u => u.Name)
+                .ThenBy(u => u.UserId) // desempate para a paginação ser estável
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .ToListAsync();
+
+            return (items, total);
         }
 
         public async Task<User> CreateUserAsync(User user, RefreshToken refreshToken)
