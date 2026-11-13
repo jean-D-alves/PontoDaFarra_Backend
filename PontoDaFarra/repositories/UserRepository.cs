@@ -83,6 +83,31 @@ namespace PontoDaFarra.repositories
             return entry.Entity;
         }
 
+        public async Task<User> ChangePasswordAsync(User user, string passwordHash, RefreshToken? newRefreshToken)
+        {
+            user.Password = passwordHash;
+            _context.Users.Update(user);
+
+            List<RefreshToken> activeTokens = await _context.RefreshTokens
+                .Where(t => t.UserId == user.UserId && t.RevokedAt == null)
+                .ToListAsync();
+
+            DateTime revokedAt = DateTime.UtcNow;
+
+            foreach (RefreshToken token in activeTokens)
+                token.RevokedAt = revokedAt;
+
+            if (newRefreshToken is not null)
+            {
+                newRefreshToken.UserId = user.UserId;
+                _context.RefreshTokens.Add(newRefreshToken);
+            }
+
+            // Senha, revogação e novo token são persistidos atomicamente.
+            await _context.SaveChangesAsync();
+            return user;
+        }
+
         public async Task<User> DeleteUserAsync(User user)
         {
             List<Order> orders = await _context.Orders
@@ -103,6 +128,35 @@ namespace PontoDaFarra.repositories
         public async Task<bool> EmailExistsAsync(string email)
         {
             return await _context.Users.AnyAsync(u => u.Email == email);
+        }
+
+        public async Task<bool> HasAdminAsync()
+        {
+            return await _context.Users
+                .AsNoTracking()
+                .AnyAsync(u => u.Role == "Admin");
+        }
+
+        public async Task<bool> TryCreateAdminAsync(User user)
+        {
+            await using var transaction = await _context.Database.BeginTransactionAsync();
+
+            _context.Users.Add(user);
+
+            try
+            {
+                await _context.SaveChangesAsync();
+                await transaction.CommitAsync();
+                return true;
+            }
+            catch (DbUpdateException exception) when (exception.InnerException is PostgresException
+                { SqlState: PostgresErrorCodes.UniqueViolation })
+            {
+                // Outra instância pode ter criado o mesmo admin entre a checagem e o insert.
+                await transaction.RollbackAsync();
+                _context.ChangeTracker.Clear();
+                return false;
+            }
         }
     }
 }

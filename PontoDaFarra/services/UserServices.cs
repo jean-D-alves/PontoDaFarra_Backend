@@ -1,4 +1,6 @@
 using System.ComponentModel.DataAnnotations;
+using Microsoft.Extensions.Logging;
+using PontoDaFarra.DTOs.Auth;
 using PontoDaFarra.DTOs.Global;
 using PontoDaFarra.DTOs.User;
 using PontoDaFarra.Exceptions;
@@ -12,7 +14,8 @@ namespace PontoDaFarra.services;
 public class UserServices(
     IUserRepository userRepository,
     ILegalService legalService,
-    ITokenService tokenService) : IUserService
+    ITokenService tokenService,
+    ILogger<UserServices> logger) : IUserService
 {
     private static readonly EmailAddressAttribute EmailValidator = new();
 
@@ -53,7 +56,7 @@ public class UserServices(
     public async Task<CreateResponse> CreateUserAsync(UserCreate dto, string? ipAddress = null)
     {
         var email = dto.Email.Trim().ToLowerInvariant();
-        ValidatePassword(dto.Password);
+        PasswordService.ValidatePassword(dto.Password);
 
         if (await userRepository.EmailExistsAsync(email))
             throw new ConflictException("Email already registered");
@@ -178,12 +181,66 @@ public class UserServices(
         await userRepository.DeleteUserAsync(user);
     }
 
-    private static void ValidatePassword(string password)
+    public async Task<AuthResponse> ChangeOwnPasswordAsync(Guid userId, ChangePasswordRequest dto)
     {
-        if (password.Length < 8)
-            throw new BadRequestException("Password must be at least 8 characters long");
+        var user = await GetUserOrThrowAsync(userId);
 
-        if (!password.Any(char.IsLetter) || !password.Any(char.IsDigit))
-            throw new BadRequestException("Password must contain at least one letter and one number");
+        EnsureCanChangePassword(user, dto.NewPassword);
+
+        var refreshToken = tokenService.GenerateRefreshToken();
+
+        await userRepository.ChangePasswordAsync(
+            user,
+            PasswordService.HashPassword(dto.NewPassword),
+            BuildRefreshToken(refreshToken));
+
+        LogPasswordChange(actorId: userId, targetUserId: userId);
+
+        return BuildAuthResponse(user, refreshToken.Token);
     }
+
+    public async Task AdminResetPasswordAsync(Guid adminId, Guid targetUserId, AdminChangePasswordRequest dto)
+    {
+        var user = await GetUserOrThrowAsync(targetUserId);
+
+        PasswordService.ValidatePassword(dto.NewPassword);
+
+        await userRepository.ChangePasswordAsync(
+            user,
+            PasswordService.HashPassword(dto.NewPassword),
+            newRefreshToken: null);
+
+        LogPasswordChange(adminId, targetUserId);
+    }
+
+    private async Task<User> GetUserOrThrowAsync(Guid userId) =>
+        await userRepository.GetUserByIdAsync(userId)
+        ?? throw new NotFoundException("User not found");
+
+    private static void EnsureCanChangePassword(User user, string newPassword)
+    {
+        PasswordService.ValidatePassword(newPassword);
+
+        if (PasswordService.VerifyPassword(newPassword, user.Password))
+            throw new BadRequestException("New password must be different from the current password");
+    }
+
+    private AuthResponse BuildAuthResponse(User user, string refreshToken)
+    {
+        var accessToken = tokenService.GenerateAccessToken(
+            user.UserId,
+            user.Email,
+            user.Name,
+            user.PhoneNumber,
+            [user.Role]);
+
+        return new AuthResponse(accessToken, refreshToken);
+    }
+
+    private void LogPasswordChange(Guid actorId, Guid targetUserId) =>
+        logger.LogInformation(
+            "Password changed for user {TargetUserId} by {ActorId} at {ChangedAtUtc:o}",
+            targetUserId,
+            actorId,
+            DateTime.UtcNow);
 }

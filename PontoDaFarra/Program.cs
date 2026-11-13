@@ -66,6 +66,9 @@ app.UseMiddleware<ProblemDetailsStatusCodeMiddleware>();
 
 app.UseAppPipeline();
 
+await app.SeedLegalDocumentsAsync();
+await app.SeedAdminAsync();
+
 app.UseForwardedHeaders();
 
 app.UseCors();

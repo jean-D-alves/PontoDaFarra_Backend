@@ -8,9 +8,12 @@ namespace PontoDaFarra.repositories.Interface
         Task<User?> GetUserByIdAsync(Guid userId);
         Task<User?> GetUserByEmailAsync(string email);
         Task<bool> EmailExistsAsync(string email);
+        Task<bool> HasAdminAsync();
+        Task<bool> TryCreateAdminAsync(User user);
         Task<(List<User> Items, int Total)> GetAllUsersAsync(UserFilterQuery filter, int page, int pageSize);
         Task<User> CreateUserAsync(User user, RefreshToken refreshToken);
         Task<User> UpdateUserAsync(User user);
+        Task<User> ChangePasswordAsync(User user, string passwordHash, RefreshToken? newRefreshToken);
         Task<User> DeleteUserAsync(User user);
     }
 }

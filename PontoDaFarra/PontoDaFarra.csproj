@@ -7,6 +7,13 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <EmbeddedResource Include="Resources\Legal\termos-v1.0.md"
+                      LogicalName="PontoDaFarra.Resources.Legal.termos-v1.0.md" />
+    <EmbeddedResource Include="Resources\Legal\politica-privacidade-v1.0.md"
+                      LogicalName="PontoDaFarra.Resources.Legal.politica-privacidade-v1.0.md" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="AWSSDK.S3" Version="4.0.104.6" />
     <PackageReference Include="BCrypt.Net-Next" Version="4.2.0" />
     <PackageReference Include="DotNetEnv" Version="3.2.0" />

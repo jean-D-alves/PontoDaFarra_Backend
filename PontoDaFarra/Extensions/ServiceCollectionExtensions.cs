@@ -148,6 +148,8 @@ public static class ServiceCollectionExtensions
         services.AddScoped<ILegalDocumentRepository, LegalDocumentRepository>();
         services.AddScoped<IUserConsentRepository, UserConsentRepository>();
         services.AddScoped<ILegalService, LegalService>();
+        services.AddScoped<LegalDocumentSeeder>();
+        services.AddScoped<AdminSeeder>();
         services.AddScoped<IApiKeyService, ApiKeyService>();
         services.AddScoped<AuthCookieService>();
         services.AddHostedService<RefreshTokenCleanupService>();

@@ -2,8 +2,10 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using PontoDaFarra.DTOs.User;
 using PontoDaFarra.Exceptions;
+using PontoDaFarra.services;
 using PontoDaFarra.services.Interface;
 using PontoDaFarra.Filters;
 
@@ -12,7 +14,9 @@ namespace PontoDaFarra.Controllers
     [ApiController]
     [Route("[controller]")]
     [Authorize]
-    public class UserController(IUserService userServices) : ControllerBase
+    public class UserController(
+        IUserService userServices,
+        AuthCookieService authCookieService) : ControllerBase
     {
         [HttpGet("all")]
         [Authorize(Roles = "Admin")]
@@ -70,6 +74,33 @@ namespace PontoDaFarra.Controllers
                 throw new ForbiddenException("Only administrators can delete other accounts");
 
             await userServices.DeleteUserAsync(id);
+            return NoContent();
+        }
+
+        [HttpPut("me/password")]
+        [ApiKey]
+        [EnableRateLimiting("auth")]
+        public async Task<IActionResult> ChangeMyPassword([FromBody] ChangePasswordRequest dto)
+        {
+            var userId = GetUserId();
+
+            var result = await userServices.ChangeOwnPasswordAsync(userId, dto);
+
+            // Sessões antigas foram revogadas: renova os cookies do próprio usuário.
+            authCookieService.Set(HttpContext, result.AccessToken, result.RefreshToken);
+
+            return Ok(new { message = "Password changed" });
+        }
+
+        [HttpPut("admin/{id:guid}/password")]
+        [ApiKey]
+        [Authorize(Roles = "Admin")]
+        public async Task<IActionResult> AdminChangePassword(Guid id, [FromBody] AdminChangePasswordRequest dto)
+        {
+            var adminId = GetUserId();
+
+            await userServices.AdminResetPasswordAsync(adminId, id, dto);
+
             return NoContent();
         }
 

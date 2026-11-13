@@ -1,7 +1,9 @@
 using Microsoft.AspNetCore.StaticFiles;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.FileProviders;
+using Npgsql;
 using PontoDaFarra.context;
+using PontoDaFarra.services;
 
 namespace PontoDaFarra.Extensions;
 
@@ -47,5 +49,40 @@ public static class WebApplicationExtensions
         }
 
         return app;
+    }
+
+    public static async Task SeedLegalDocumentsAsync(this WebApplication app)
+    {
+        using var scope = app.Services.CreateScope();
+        var seeder = scope.ServiceProvider.GetRequiredService<LegalDocumentSeeder>();
+
+        try
+        {
+            await seeder.SeedAsync();
+        }
+        catch (PostgresException exception)
+            when (exception.SqlState == PostgresErrorCodes.UndefinedTable)
+        {
+            // Sem migrations, o cadastro público também não funciona; apenas avisamos.
+            app.Logger.LogWarning(
+                "Tabela de documentos legais ausente. Seed ignorado até que as migrations sejam aplicadas.");
+        }
+    }
+
+    public static async Task SeedAdminAsync(this WebApplication app)
+    {
+        using var scope = app.Services.CreateScope();
+        var seeder = scope.ServiceProvider.GetRequiredService<AdminSeeder>();
+
+        try
+        {
+            await seeder.SeedAsync();
+        }
+        catch (PostgresException exception)
+            when (exception.SqlState == PostgresErrorCodes.UndefinedTable)
+        {
+            app.Logger.LogWarning(
+                "Tabela de usuários ausente. Seed do admin inicial ignorado até que as migrations sejam aplicadas.");
+        }
     }
 }
