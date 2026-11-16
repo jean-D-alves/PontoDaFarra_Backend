@@ -56,8 +56,8 @@ namespace PontoDaFarra.services
                 throw new BadRequestException("TotalValue must be greater than zero");
             if (totalValue > 10000)
                 throw new BadRequestException("TotalValue must be less than or equal to 10,000");
-            if (request.FulfillmentMethod == FulfillmentMethod.Delivery)
-                deliveryFee = 3; // Delivery: mantém regra (acima de 25) e até 25 recebe R$ 3,00
+            if (request.FulfillmentMethod == FulfillmentMethod.Delivery && totalValue < 25)
+                deliveryFee = 3;
             var order = new Order
             {
                 OrderId = Guid.NewGuid(),
