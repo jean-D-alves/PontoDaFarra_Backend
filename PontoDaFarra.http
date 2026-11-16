@@ -1,0 +1,48 @@
+@host = http://localhost:8081
+@apiKey = substitua-pela-api-key
+@accessToken = cole-o-access_token-retornado-no-login
+@userId = cole-o-id-do-usuario
+
+### Login (guarde os cookies retornados)
+POST {{host}}/auth/login
+Content-Type: application/json
+X-Api-Key: {{apiKey}}
+
+{
+  "email": "usuario@example.com",
+  "password": "SenhaAtual123"
+}
+
+### Alterar a própria senha (usuário identificado pelo token)
+PUT {{host}}/user/me/password
+Content-Type: application/json
+X-Api-Key: {{apiKey}}
+Cookie: access_token={{accessToken}}
+
+{
+  "newPassword": "SenhaNova123"
+}
+
+### Redefinir a senha de outro usuário (somente Admin)
+PUT {{host}}/user/admin/{{userId}}/password
+Content-Type: application/json
+X-Api-Key: {{apiKey}}
+Cookie: access_token={{accessToken}}
+
+{
+  "newPassword": "SenhaNova123"
+}
+
+# Equivalentes em curl
+#
+# curl -i -X PUT "http://localhost:8081/user/me/password" \
+#   -H "Content-Type: application/json" \
+#   -H "X-Api-Key: $API_KEY" \
+#   -H "Cookie: access_token=$ACCESS_TOKEN" \
+#   -d '{"newPassword":"SenhaNova123"}'
+#
+# curl -i -X PUT "http://localhost:8081/user/admin/$USER_ID/password" \
+#   -H "Content-Type: application/json" \
+#   -H "X-Api-Key: $API_KEY" \
+#   -H "Cookie: access_token=$ACCESS_TOKEN" \
+#   -d '{"newPassword":"SenhaNova123"}'
