@@ -12,6 +12,6 @@ namespace PontoDaFarra.repositories.Interface
         Task<(List<Order> Items, int Total)> GetAllOrdersAsync(int page, int pageSize);
         Task<Order?> GetOrderByIdAsync(Guid orderId);
         Task DeleteOrderAsync(Order order);
-        Task<List<(Guid ProductId, string ProductName, int Quantity, decimal UnitPrice, Guid OrderId)>> GetItemsForChartAsync(DateTime from, DateTime to);
+        Task<List<(Guid? ProductId, string ProductName, int Quantity, decimal UnitPrice, Guid OrderId)>> GetItemsForChartAsync(DateTime from, DateTime to);
     }
 }

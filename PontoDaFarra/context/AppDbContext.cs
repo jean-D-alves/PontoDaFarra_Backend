@@ -56,10 +56,12 @@ public class AppDbContext : DbContext
         modelBuilder.Entity<OrderItem>(e =>
         {
             e.HasKey(x => x.OrderItemId);
+            e.Property(x => x.ProductName).IsRequired();
+
             e.HasOne(x => x.Product)
              .WithMany()
              .HasForeignKey(x => x.ProductId)
-             .OnDelete(DeleteBehavior.Restrict);
+             .OnDelete(DeleteBehavior.SetNull);
         });
         modelBuilder.Entity<Location>(e =>
         {

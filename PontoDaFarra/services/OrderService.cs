@@ -44,6 +44,7 @@ namespace PontoDaFarra.services
                 {
                     OrderItemId = Guid.NewGuid(),
                     ProductId = product.ProductId,
+                    ProductName = product.Name,
                     Quantity = item.Quantity,
                     UnitPrice = product.Value
                 });
@@ -188,6 +189,7 @@ namespace PontoDaFarra.services
             Items = order.Items.Select(i => new OrderItemResponse
             {
                 ProductId = i.ProductId,
+                ProductName = i.ProductName,
                 Quantity = i.Quantity,
                 UnitPrice = i.UnitPrice
             }).ToList()
@@ -207,6 +209,7 @@ namespace PontoDaFarra.services
             Items = order.Items.Select(i => new OrderItemResponse
             {
                 ProductId = i.ProductId,
+                ProductName = i.ProductName,
                 Quantity = i.Quantity,
                 UnitPrice = i.UnitPrice
             }).ToList()
@@ -225,6 +228,7 @@ namespace PontoDaFarra.services
             Items = order.Items.Select(i => new OrderItemResponse
             {
                 ProductId = i.ProductId,
+                ProductName = i.ProductName,
                 Quantity = i.Quantity,
                 UnitPrice = i.UnitPrice
             }).ToList()

@@ -57,16 +57,23 @@ namespace PontoDaFarra.repositories
             await context.SaveChangesAsync();
         }
 
-        public async Task<List<(Guid ProductId, string ProductName, int Quantity, decimal UnitPrice, Guid OrderId)>> GetItemsForChartAsync(DateTime from, DateTime to)
+        public async Task<List<(Guid? ProductId, string ProductName, int Quantity, decimal UnitPrice, Guid OrderId)>> GetItemsForChartAsync(DateTime from, DateTime to)
         {
             var result = await context.OrderItems
                 .AsNoTracking()
-                .Include(oi => oi.Product)
                 .Include(oi => oi.Order)
                 .Where(oi => oi.Order.CreatedAt >= from && oi.Order.CreatedAt <= to)
-                .Select(oi => new ValueTuple<Guid, string, int, decimal, Guid>(oi.ProductId, oi.Product.Name, oi.Quantity, oi.UnitPrice, oi.OrderId))
+                .Select(oi => new ValueTuple<Guid?, string, int, decimal, Guid>(
+                    oi.ProductId,
+                    oi.ProductName,
+                    oi.Quantity,
+                    oi.UnitPrice,
+                    oi.OrderId
+                ))
                 .ToListAsync();
+
             return result;
         }
+
     }
 }
