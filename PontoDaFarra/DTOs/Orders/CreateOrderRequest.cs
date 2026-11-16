@@ -1,11 +1,12 @@
 using System;
 using System.Collections.Generic;
+using PontoDaFarra.models;
 
 namespace PontoDaFarra.DTOs.Orders
 {
     public class CreateOrderRequest
     {
-        public decimal TotalValue { get; set; }
         public List<CreateOrderItemRequest> Items { get; set; } = new();
+        public FulfillmentMethod FulfillmentMethod { get; set; }
     }
 }

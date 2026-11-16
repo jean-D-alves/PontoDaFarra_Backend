@@ -136,6 +136,12 @@ namespace PontoDaFarra.Migrations
                     b.Property<string>("CustomerPhone")
                         .HasColumnType("text");
 
+                    b.Property<int>("DeliveryFee")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("FulfillmentMethod")
+                        .HasColumnType("integer");
+
                     b.Property<decimal>("TotalValue")
                         .HasColumnType("numeric");
 

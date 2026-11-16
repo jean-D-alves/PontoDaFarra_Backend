@@ -10,6 +10,8 @@ namespace PontoDaFarra.models
         public required string CustomerName { get; set; }
         public string? CustomerPhone { get; set; }
         public decimal TotalValue { get; set; }
+        public FulfillmentMethod FulfillmentMethod { get; set; }
+        public int DeliveryFee { get; set; }
         public DateTime CreatedAt { get; set; }
         public User? User { get; set; }
         public ICollection<OrderItem> Items { get; set; } = new List<OrderItem>();

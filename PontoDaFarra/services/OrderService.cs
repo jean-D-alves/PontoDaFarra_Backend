@@ -20,8 +20,6 @@ namespace PontoDaFarra.services
         {
             if (request.Items == null || request.Items.Count == 0)
                 throw new BadRequestException("Items cannot be empty");
-            if (request.TotalValue <= 0)
-                throw new BadRequestException("TotalValue must be greater than zero");
             var user = await userRepository.GetUserByIdAsync(userId)
                 ?? throw new NotFoundException("User not found");
             if (string.IsNullOrWhiteSpace(user.Name))
@@ -30,37 +28,45 @@ namespace PontoDaFarra.services
                 throw new BadRequestException("User phone number is required");
             var grouped = request.Items
                 .GroupBy(i => i.ProductId)
-                .Select(g => new CreateOrderItemRequest
-                {
-                    ProductId = g.Key,
-                    Quantity = g.Sum(x => x.Quantity),
-                    UnitPrice = g.First().UnitPrice
-                })
+                .Select(g => new { ProductId = g.Key, Quantity = g.Sum(x => x.Quantity) })
                 .ToList();
             var orderItems = new List<OrderItem>();
+            decimal totalValue = 0;
             foreach (var item in grouped)
             {
                 if (item.Quantity <= 0)
                     throw new BadRequestException("Quantity must be greater than zero");
-                if (item.UnitPrice <= 0)
-                    throw new BadRequestException("UnitPrice must be greater than zero");
                 var product = await productsRepository.GetProductByIdAsync(item.ProductId)
                     ?? throw new BadRequestException("Product not found");
+                if (product.Value <= 0)
+                    throw new BadRequestException("Product price must be greater than zero");
                 orderItems.Add(new OrderItem
                 {
                     OrderItemId = Guid.NewGuid(),
                     ProductId = product.ProductId,
                     Quantity = item.Quantity,
-                    UnitPrice = item.UnitPrice
+                    UnitPrice = product.Value
                 });
+                totalValue += item.Quantity * product.Value;
             }
+            if (!Enum.IsDefined(typeof(FulfillmentMethod), request.FulfillmentMethod))
+                throw new BadRequestException("Invalid fulfillment method");
+            int deliveryFee = 0;
+            if (totalValue <= 0)
+                throw new BadRequestException("TotalValue must be greater than zero");
+            if (totalValue > 10000)
+                throw new BadRequestException("TotalValue must be less than or equal to 10,000");
+            if (request.FulfillmentMethod == FulfillmentMethod.Delivery)
+                deliveryFee = 3; // Delivery: mantém regra (acima de 25) e até 25 recebe R$ 3,00
             var order = new Order
             {
                 OrderId = Guid.NewGuid(),
                 UserId = user.UserId,
                 CustomerName = user.Name.Trim(),
                 CustomerPhone = string.IsNullOrWhiteSpace(user.PhoneNumber) ? null : user.PhoneNumber.Trim(),
-                TotalValue = request.TotalValue,
+                TotalValue = totalValue,
+                FulfillmentMethod = request.FulfillmentMethod,
+                DeliveryFee = deliveryFee,
                 CreatedAt = DateTime.UtcNow,
                 Items = orderItems
             };
@@ -176,6 +182,8 @@ namespace PontoDaFarra.services
             CustomerName = order.CustomerName,
             CustomerPhone = order.CustomerPhone,
             TotalValue = order.TotalValue,
+            FulfillmentMethod = order.FulfillmentMethod,
+            DeliveryFee = order.DeliveryFee,
             CreatedAt = order.CreatedAt,
             Items = order.Items.Select(i => new OrderItemResponse
             {
@@ -193,6 +201,8 @@ namespace PontoDaFarra.services
             CustomerName = order.CustomerName,
             CustomerPhone = order.CustomerPhone,
             TotalValue = order.TotalValue,
+            FulfillmentMethod = order.FulfillmentMethod,
+            DeliveryFee = order.DeliveryFee,
             CreatedAt = order.CreatedAt,
             Items = order.Items.Select(i => new OrderItemResponse
             {
@@ -209,6 +219,8 @@ namespace PontoDaFarra.services
             CustomerName = order.CustomerName,
             CustomerPhone = order.CustomerPhone,
             TotalValue = order.TotalValue,
+            FulfillmentMethod = order.FulfillmentMethod,
+            DeliveryFee = order.DeliveryFee,
             CreatedAt = order.CreatedAt,
             Items = order.Items.Select(i => new OrderItemResponse
             {
